@@ -38,7 +38,7 @@ You will be prompted with the following interactive steps in your terminal:
 2. **Need to install the following packages: create-vite... Ok to proceed? (y)**
    - Press **`y`** (or just press **Enter**) to download the creator tool.
 3. **Select a framework:**
-   - Use the arrow keys (↓/↑) to highlight **`React`** and press **Enter**.
+   - Use the arrow keys (↓/↑) to select **`React`** and press **Enter**.
 4. **Select a variant:**
    - Highlight **`JavaScript`** or **`TypeScript`** and press **Enter**.
 5. **Use ESLint instead of Oxlint?**
