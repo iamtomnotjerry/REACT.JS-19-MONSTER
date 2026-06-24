@@ -7,7 +7,7 @@ Welcome to the **REACT.JS-19-MONSTER** repository! This repository tracks my jou
 Track your learning progress through the course timeline:
 
 - [ ] 🎬 **00:00:00** - Intro
-- [ ] 📚 **00:04:31** - React Fundamentals ([What is ReactJS?](file:///d:/REACT.JS-19-MONSTER/what-is-reactjs.md))
+- [ ] 📚 **00:04:31** - React Fundamentals ([What is ReactJS?](./what-is-reactjs.md) | [How to Install React](./how-to-install-react.md))
 - [ ] ⚓ **02:45:30** - React Hooks
 - [ ] 🚀 **04:00:22** - React Projects For Beginners
 - [ ] 📘 **06:43:39** - TypeScript Complete Course

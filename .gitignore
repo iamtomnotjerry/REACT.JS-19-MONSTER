@@ -6,10 +6,10 @@ node_modules/
 /coverage
 
 # Production
-/dist
-/build
-/out
-/.next
+dist/
+build/
+out/
+.next/
 
 # Misc
 .DS_Store
