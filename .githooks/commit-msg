@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# Get the commit message file path from git
+COMMIT_MSG_FILE=$1
+# Read the first line of the commit message
+COMMIT_MSG=$(head -n 1 "$COMMIT_MSG_FILE")
+
+# Allow merge commits automatically
+if echo "$COMMIT_MSG" | grep -Eq "^Merge "; then
+    exit 0
+fi
+
+# Regular expression for Conventional Commits
+# Format: type(scope): description or type: description
+# Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+REGEXP="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-zA-Z0-9_.-]+\))?!?: .+$"
+
+if ! echo "$COMMIT_MSG" | grep -Eq "$REGEXP"; then
+    echo "========================================================================"
+    echo "❌ COMMIT REJECTED!"
+    echo "========================================================================"
+    echo "Your commit message does not follow the Conventional Commits standard."
+    echo ""
+    echo "Expected Format:"
+    echo "  <type>(<optional-scope>): <description>"
+    echo ""
+    echo "Allowed Types:"
+    echo "  feat     : A new feature"
+    echo "  fix      : A bug fix"
+    echo "  docs     : Documentation changes only (e.g. README, guides)"
+    echo "  style    : Changes that do not affect the meaning of the code (formatting, semi-colons)"
+    echo "  refactor : A code change that neither fixes a bug nor adds a feature"
+    echo "  perf     : A code change that improves performance"
+    echo "  test     : Adding missing tests or correcting existing tests"
+    echo "  build    : Changes that affect the build system or external dependencies"
+    echo "  ci       : Changes to CI configuration files and scripts"
+    echo "  chore    : Other changes that don't modify src or test files (e.g. .gitignore)"
+    echo "  revert   : Reverts a previous commit"
+    echo ""
+    echo "Examples:"
+    echo "  docs: add what is reactjs documentation"
+    echo "  chore: configure gitignore"
+    echo "  feat(auth): implement google login button"
+    echo "========================================================================"
+    exit 1
+fi
