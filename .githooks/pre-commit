@@ -1,0 +1,50 @@
+#!/bin/sh
+
+echo "========================================================================"
+echo "🔍 RUNNING PRE-COMMIT CHECKS..."
+echo "========================================================================"
+
+# Navigate to the React application folder
+cd first-react-app || { echo "❌ Directory first-react-app not found!"; exit 1; }
+
+# 1. Run Prettier format verification
+echo "✨ Checking code formatting (Prettier)..."
+if ! npm run format:check; then
+    echo "========================================================================"
+    echo "❌ COMMIT REJECTED!"
+    echo "========================================================================"
+    echo "Code formatting does not match Prettier rules."
+    echo "Please run: npm run format"
+    echo "inside the 'first-react-app' directory before committing."
+    echo "========================================================================"
+    exit 1
+fi
+
+# 2. Run ESLint code quality check
+echo "⚙️ Running linter (ESLint)..."
+if ! npm run lint; then
+    echo "========================================================================"
+    echo "❌ COMMIT REJECTED!"
+    echo "========================================================================"
+    echo "ESLint checks failed with errors."
+    echo "Please fix the lint errors listed above before committing."
+    echo "========================================================================"
+    exit 1
+fi
+
+# 3. Build verification
+echo "📦 Running production build check..."
+if ! npm run build; then
+    echo "========================================================================"
+    echo "❌ COMMIT REJECTED!"
+    echo "========================================================================"
+    echo "Production build failed! Your code has compilation errors."
+    echo "Please fix the build issues before committing."
+    echo "========================================================================"
+    exit 1
+fi
+
+echo "========================================================================"
+echo "✅ ALL PRE-COMMIT CHECKS PASSED SUCCESSFULLY!"
+echo "========================================================================"
+exit 0

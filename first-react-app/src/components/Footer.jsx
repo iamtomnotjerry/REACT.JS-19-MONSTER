@@ -1,9 +1,5 @@
 const Footer = () => {
-    return (
-        <>
-            <div>© 2026 React Monster. All rights reserved.</div>
-        </>
-    )
+  return <footer>© 2026 React Monster. All rights reserved.</footer>
 }
 
 export default Footer

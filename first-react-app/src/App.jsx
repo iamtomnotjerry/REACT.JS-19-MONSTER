@@ -1,14 +1,29 @@
-import Header from "./components/Header"
-import Footer from "./components/Footer"
-import UserInfo from "./components/UserInfo"
-import LikeButton from "./components/LikeButton"
+import Header from './components/Header'
+import { Navbar } from './components/Navbar'
+import UserInfo from './components/UserInfo'
+import LikeButton from './components/LikeButton'
+import Footer from './components/Footer'
+
 const App = () => {
   return (
     <>
       <Header />
-      <UserInfo name="John Doe" role="React Developer" bio="I am a React Developer" />
-      <UserInfo name="Jane Doe" role="Frontend Developer" bio="I am a Frontend Developer" />
-      <UserInfo name="Peter Jones" role="Backend Developer" bio="I am a Backend Developer" />
+      <Navbar />
+      <UserInfo
+        name="John Doe"
+        role="React Developer"
+        bio="Builds component-driven UIs with React 19."
+      />
+      <UserInfo
+        name="Jane Doe"
+        role="Frontend Developer"
+        bio="Turns design systems into accessible interfaces."
+      />
+      <UserInfo
+        name="Peter Jones"
+        role="Backend Developer"
+        bio="Designs the APIs that power the frontend."
+      />
       <LikeButton />
       <Footer />
     </>

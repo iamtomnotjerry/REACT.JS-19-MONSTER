@@ -1,13 +1,11 @@
-function UserInfo({ name, role, bio }) {
-    return (
-        <>
-            <div>
-                <h1>{name}</h1>
-                <h2>{role}</h2>
-                <p>{bio}</p>
-            </div>
-        </>
-    )
+const UserInfo = ({ name, role, bio }) => {
+  return (
+    <article>
+      <h3>{name}</h3>
+      <strong>{role}</strong>
+      <p>{bio}</p>
+    </article>
+  )
 }
 
 export default UserInfo
