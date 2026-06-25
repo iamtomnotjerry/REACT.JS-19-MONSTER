@@ -1,21 +1,21 @@
-# Dự án 1 & 2: Bộ đếm & Danh sách công việc (Todo List) 🚀
+# Dự án 1 & 2: Counter & Todo List 🚀
 
-Trong bài học này, chúng ta sẽ xây dựng hai dự án khởi đầu: **Bộ đếm (Counter)** và **Danh sách công việc (Todo List)**. Đây là những dự án nền tảng trong lập trình React, giúp thực hành quản lý trạng thái (`useState`), liên kết sự kiện, biểu mẫu đầu vào và thao tác bất biến trên mảng dữ liệu.
+Trong bài học này, chúng ta sẽ xây dựng hai dự án đầu tiên dành cho người mới bắt đầu: một **ứng dụng Counter** và một **Todo List**. Những dự án này là nền tảng cốt lõi của việc phát triển React tương tác, giúp luyện tập quản lý state (`useState`), gắn kết event, điều khiển form và các thao tác mảng bất biến (immutable).
 
 ---
 
-## 🔢 Dự án 1: Ứng dụng Bộ đếm (Counter)
+## 🔢 Dự án 1: Ứng dụng Counter
 
-Bộ đếm là dự án kinh điển khi bắt đầu học quản lý state trong React. Nó cho phép người dùng thay đổi và hiển thị một giá trị số thông qua các nút bấm.
+Counter là "Hello World" kinh điển của state trong React. Nó cho phép chúng ta xem và thay đổi một state dạng số bằng các nút bấm.
 
-### Các khái niệm chính được thực hành:
-* Quản lý trạng thái số học bằng `useState`.
-* Các hàm xử lý sự kiện click (`onClick`).
-* Cập nhật state dạng callback (`prev => prev + 1`) để đảm bảo dữ liệu luôn chính xác.
+### Các khái niệm chính được luyện tập:
+* Quản lý state dạng số với `useState`.
+* Event handler (`onClick`).
+* Cập nhật dạng hàm (`prev => prev + 1`) để đảm bảo tính chính xác của state.
 
-### Hướng dẫn triển khai từng bước (`Counter.jsx`)
+### Triển khai từng bước (`Counter.jsx`)
 
-Tạo một tệp component tại `src/components/Counter.jsx` và viết đoạn mã sau:
+Tạo một file component tại `src/components/Counter.jsx` và chèn đoạn code sau:
 
 ```jsx
 import { useState } from 'react';
@@ -23,27 +23,27 @@ import { useState } from 'react';
 export const Counter = () => {
   const [count, setCount] = useState(0);
 
-  // 1. Cập nhật state dạng hàm là best practice để tránh lỗi dữ liệu bất đồng bộ
+  // 1. Functional updates are a best practice to avoid stale state bugs
   const increment = () => setCount((prev) => prev + 1);
   const decrement = () => setCount((prev) => prev - 1);
   const reset = () => setCount(0);
 
   return (
     <div style={styles.card}>
-      <h2 style={styles.title}>Dự án 1: Bộ đếm React</h2>
+      <h2 style={styles.title}>Project 1: React Counter</h2>
       <div style={styles.counterBox}>
         <h1 style={styles.number}>{count}</h1>
       </div>
       <div style={styles.btnGroup}>
-        <button style={styles.btnDecrement} onClick={decrement}>- Giảm</button>
-        <button style={styles.btnReset} onClick={reset}>Đặt lại</button>
-        <button style={styles.btnIncrement} onClick={increment}>+ Tăng</button>
+        <button style={styles.btnDecrement} onClick={decrement}>- Decrement</button>
+        <button style={styles.btnReset} onClick={reset}>Reset</button>
+        <button style={styles.btnIncrement} onClick={increment}>+ Increment</button>
       </div>
     </div>
   );
 };
 
-// Hệ thống phong cách CSS Inline
+// Sleek inline styling system
 const styles = {
   card: {
     padding: "30px",
@@ -109,18 +109,18 @@ const styles = {
 
 ---
 
-## 📝 Dự án 2: Danh sách công việc (Todo List)
+## 📝 Dự án 2: Ứng dụng Todo List
 
-Dự án Todo List chuyển đổi từ quản lý một con số đơn giản sang quản lý một **mảng các đối tượng (array of objects)**. Chúng ta sẽ hỗ trợ các tính năng: thêm mới, đánh dấu hoàn thành và xóa các công việc.
+Dự án Todo List chuyển từ những con số đơn giản sang việc quản lý **mảng các object**. Chúng ta sẽ hỗ trợ thêm task, đánh dấu task hoàn thành và xóa task.
 
-### Các khái niệm chính được thực hành:
-* **Controlled Inputs (Đầu vào được kiểm soát)**: Liên kết ô nhập liệu trực tiếp với biến state của React.
-* **Immutable Updates (Cập nhật bất biến)**: Sử dụng toán tử spread (`...`) hoặc hàm `.filter()` để tạo bản sao mảng mới thay vì chỉnh sửa trực tiếp mảng state.
-* **Render danh sách**: Sử dụng vòng lặp `.map()` để hiển thị các phần tử và gán thuộc tính `key` duy nhất.
+### Các khái niệm chính được luyện tập:
+* **Controlled Input**: Gắn kết các trường input với các biến state cục bộ.
+* **Cập nhật bất biến (Immutable Updates)**: Tạo bản sao của mảng bằng spread operator (`...`) hoặc `.filter()`, thay vì sửa đổi trực tiếp mảng state.
+* **Render danh sách**: Lặp qua các phần tử bằng `.map()` và gán thuộc tính `key` riêng biệt.
 
-### Hướng dẫn triển khai từng bước (`Todo.jsx`)
+### Triển khai từng bước (`Todo.jsx`)
 
-Tạo một tệp component tại `src/components/Todo.jsx` và viết đoạn mã sau:
+Tạo một file component tại `src/components/Todo.jsx` và chèn đoạn code sau:
 
 ```jsx
 import { useState } from 'react';
@@ -133,7 +133,7 @@ export const Todo = () => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    // 1. THÊM PHẦN TỬ: Trả về một mảng mới chứa các phần tử cũ cộng thêm phần tử mới
+    // 1. ADD ITEM: Return a new array containing existing items plus the new item
     const newTodo = {
       id: Date.now(),
       text: input,
@@ -141,11 +141,11 @@ export const Todo = () => {
     };
 
     setTodos([...todos, newTodo]);
-    setInput(""); // Xóa sạch nội dung ô nhập
+    setInput(""); // Clear input box
   };
 
   const toggleComplete = (id) => {
-    // 2. CẬP NHẬT PHẦN TỬ: Map qua mảng để tạo bản sao object cần sửa đổi
+    // 2. UPDATE ITEM: Map through and create a copy of the changed object
     setTodos(
       todos.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo
@@ -154,22 +154,22 @@ export const Todo = () => {
   };
 
   const removeTodo = (id) => {
-    // 3. XÓA PHẦN TỬ: Lọc bỏ phần tử để tạo ra mảng mới hoàn toàn
+    // 3. DELETE ITEM: Filter out the item to create a new array
     setTodos(todos.filter((todo) => todo.id !== id));
   };
 
   return (
     <div style={todoStyles.card}>
-      <h2 style={todoStyles.title}>Dự án 2: Danh sách công việc</h2>
+      <h2 style={todoStyles.title}>Project 2: React Todo List</h2>
       <form onSubmit={handleSubmit} style={todoStyles.form}>
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Bạn cần làm gì hôm nay?"
+          placeholder="What needs to be done?"
           style={todoStyles.input}
         />
-        <button type="submit" style={todoStyles.addBtn}>Thêm</button>
+        <button type="submit" style={todoStyles.addBtn}>Add</button>
       </form>
 
       <ul style={todoStyles.list}>
@@ -186,13 +186,13 @@ export const Todo = () => {
               {todo.text}
             </span>
             <button onClick={() => removeTodo(todo.id)} style={todoStyles.removeBtn}>
-              Xóa
+              Remove
             </button>
           </li>
         ))}
       </ul>
       
-      {todos.length === 0 && <p style={todoStyles.emptyText}>Chưa có công việc nào!</p>}
+      {todos.length === 0 && <p style={todoStyles.emptyText}>No tasks added yet!</p>}
     </div>
   );
 };
@@ -268,53 +268,53 @@ const todoStyles = {
 
 ---
 
-## ⚠️ Nguyên tắc thực hành: Tính bất biến (Immutability)
+## ⚠️ Thực hành thiết yếu: Quy tắc bất biến (Immutability)
 
 > [!IMPORTANT]
-> Bạn tuyệt đối **không được** chỉnh sửa trực tiếp dữ liệu state của React.
-> - **Sai**: `todos.push(newTodo)` rồi gọi `setTodos(todos)`.
+> Bạn **không bao giờ** được mutate (sửa đổi trực tiếp) state của React.
+> - **Sai**: `todos.push(newTodo)` rồi sau đó `setTodos(todos)`.
 > - **Đúng**: `setTodos([...todos, newTodo])`.
-> React sử dụng so sánh tham chiếu nông để nhận biết state có cập nhật hay không. Nếu bạn chỉnh sửa trực tiếp mảng cũ, địa chỉ bộ nhớ không thay đổi, React sẽ nghĩ dữ liệu không thay đổi và bỏ qua việc hiển thị lại giao diện UI.
+> React sử dụng so sánh tham chiếu nông (shallow reference comparison) để xác định xem state đã được cập nhật hay chưa. Nếu bạn mutate trực tiếp mảng, tham chiếu bộ nhớ vẫn giữ nguyên, và React sẽ không kích hoạt re-render.
 
 ---
 
 ## 🧠 Kiểm tra kiến thức
 
-Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của bạn. Nhấp vào **Reveal Answer** để xác nhận câu trả lời.
+Trả lời những câu hỏi sau để kiểm tra mức độ hiểu của bạn về các dự án dành cho người mới bắt đầu này. Nhấn **Reveal Answer** để xác minh.
 
-### 1. Tại sao React yêu cầu thuộc tính `key` duy nhất cho các phần tử bên trong vòng lặp `.map()`?
+### 1. Tại sao React yêu cầu một prop `key` duy nhất cho các phần tử bên trong danh sách `.map()`?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  React sử dụng thuộc tính `key` trong quá trình **Reconciliation** (đối chiếu và render lại danh sách). Key hoạt động như một mã định danh duy nhất cho từng phần tử, báo cho React biết phần tử nào vừa được thêm, sửa hoặc xóa. Nếu không có key, React buộc phải render lại toàn bộ danh sách, gây chậm hiệu suất và lỗi liên quan đến việc focus của ô nhập.
+  React sử dụng prop `key` trong quá trình **Reconciliation** (re-render danh sách). Key đóng vai trò như một ID ổn định cho mỗi phần tử, cho React biết phần tử nào đã được thêm, thay đổi hay xóa. Nếu không có key, React phải re-render toàn bộ cấu trúc danh sách, làm chậm hiệu năng render và gây ra các vấn đề với focus của input.
 </details>
 
-### 2. Chúng ta có thể dùng chỉ số index của mảng để làm thuộc tính `key` không? Nó có thể gây ra lỗi gì?
+### 2. Chúng ta có thể dùng chỉ số mảng (`index`) làm prop `key` không? Điều đó có thể gây ra những vấn đề gì?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Mặc dù React cho phép sử dụng, nhưng dùng index của mảng làm key là một bad practice đối với các danh sách động. Nếu danh sách bị sắp xếp lại, xóa bớt hoặc thêm vào giữa, chỉ số index của các phần tử cũ sẽ bị thay đổi. Điều này khiến thuật toán đối chiếu của React bị nhầm lẫn, dẫn đến các lỗi render (ví dụ nội dung text input vẫn giữ ở dòng cũ) và giảm hiệu năng đáng kể.
+  Mặc dù React cho phép điều này, việc dùng chỉ số mảng làm key là một anti-pattern đối với danh sách động. Nếu các phần tử trong danh sách được sắp xếp lại, bị xóa, hoặc chèn vào giữa, chỉ số sẽ thay đổi đối với các phần tử hiện có. Điều này làm rối engine reconciliation của React, dẫn đến các lỗi render (chẳng hạn input văn bản nằm sai dòng) và làm giảm hiệu năng.
 </details>
 
-### 3. "Controlled input" (đầu vào được kiểm soát) trong React là gì?
+### 3. "Controlled input" trong React là gì?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Controlled input là một phần tử `<input>` có giá trị hiển thị được điều khiển hoàn toàn bởi một biến state của React (thông qua thuộc tính `value`) và cập nhật thông qua hàm cập nhật state (thông qua sự kiện `onChange`). Việc này giúp React trở thành "nguồn chân lý duy nhất" (single source of truth) kiểm soát nội dung ô nhập.
+  Controlled input là một phần tử `<input>` mà giá trị của nó được điều khiển bởi một biến state của React (qua thuộc tính `value`) và được cập nhật thông qua một state setter của React (qua event listener `onChange`). Điều này khiến React trở thành nguồn chân lý duy nhất (single source of truth) cho nội dung của input.
 </details>
 
-### 4. Toán tử spread (`...`) là gì và tại sao nó được sử dụng thường xuyên khi thay đổi state?
+### 4. Spread operator (`...`) là gì và tại sao nó được sử dụng thường xuyên đến vậy trong các thay đổi state của React?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Toán tử spread sao chép toàn bộ các phần tử của một mảng hoặc các thuộc tính của một object cũ vào một mảng hoặc object mới hoàn toàn: `[...existingArray, newItem]`. Nó được sử dụng vì state trong React yêu cầu cập nhật bất biến. Toán tử spread tạo ra một địa chỉ tham chiếu mới, báo cho React biết để kích hoạt hiển thị lại giao diện UI.
+  Spread operator sao chép các phần tử của một mảng hoặc object hiện có vào một mảng hoặc object literal hoàn toàn mới: `[...existingArray, newItem]`. Nó được sử dụng vì state của React phải được cập nhật một cách bất biến. Spread operator tạo ra một tham chiếu object hoàn toàn mới, báo hiệu cho React re-render.
 </details>
 
-### 5. Tại sao chúng ta hay sử dụng hàm `e.preventDefault()` trong sự kiện submit của form?
+### 5. Tại sao chúng ta bọc các event handler trong form bằng `e.preventDefault()`?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Mặc định, các form HTML sẽ tải lại (refresh) toàn bộ trang web khi người dùng nhấn submit. Gọi hàm `e.preventDefault()` yêu cầu trình duyệt hủy bỏ hành động mặc định này, cho phép mã nguồn React tự xử lý việc submit một cách mượt mà (ví dụ như cập nhật state cục bộ hoặc gọi API) mà không làm tải lại trang.
+  Theo mặc định, các form HTML tiêu chuẩn sẽ tải lại (refresh) trang trình duyệt khi được submit. Việc gọi `e.preventDefault()` báo cho trình duyệt hủy bỏ hành động mặc định này, cho phép code React xử lý sự kiện submit một cách bất đồng bộ (ví dụ cập nhật state cục bộ hoặc gọi API) mà không tải lại trang web.
 </details>
 
 ---
@@ -323,12 +323,12 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của b
 
 Áp dụng những gì bạn đã học vào dự án React của mình:
 
-### 🛠️ Bài tập 1: Bộ đếm bước nhảy tùy chỉnh (Counter Step Input)
-1. Render component `<Counter />` vào tệp `App.jsx` của bạn.
-2. Thêm một ô nhập số (text hoặc number input) vào component bộ đếm.
-3. Cho phép người dùng nhập một con số bước nhảy tùy chọn (ví dụ: `5`), để khi bấm nút Tăng (Increment) hoặc Giảm (Decrement), giá trị của đếm sẽ tăng hoặc giảm tương ứng là `5` đơn vị thay vì `1`.
+### 🛠️ Bài tập 1: Các phép toán Counter nâng cao
+1. Render `<Counter />` bên trong `App.jsx` của bạn.
+2. Thêm một trường text input vào counter.
+3. Cho phép người dùng nhập một mức bước (step) tùy chỉnh (ví dụ `5`), để khi nhấn nút Increment, count tăng thêm `5` thay vì `1`.
 
-### 🛠️ Bài tập 2: Tính năng Xóa sạch & Đếm số lượng công việc
+### 🛠️ Bài tập 2: Xóa tất cả task & Huy hiệu đếm số
 1. Mở component `<Todo />` của bạn.
-2. Thêm một nhãn thông tin nhỏ ở phía dưới danh sách: "Công việc chưa hoàn thành: X" (hãy tính toán số này dựa trên số lượng phần tử có thuộc tính `completed` là `false`).
-3. Thêm một nút bấm "Xóa tất cả" để kích hoạt sự kiện dọn sạch toàn bộ mảng `todos` về lại mảng rỗng `[]`.
+2. Thêm một huy hiệu (badge) hoặc một đoạn văn ở dưới cùng hiển thị: "Pending tasks: X" (tính từ số lượng các phần tử chưa hoàn thành).
+3. Thêm một nút "Clear All" để kích hoạt một thay đổi state, đặt lại mảng `todos` về `[]`.

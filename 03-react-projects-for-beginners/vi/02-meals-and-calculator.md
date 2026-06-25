@@ -1,21 +1,21 @@
-# Dự án 3 & 4: Gọi API Món ăn & Máy tính bỏ túi 🚀
+# Dự án 3 & 4: Meals API & Máy tính 🚀
 
-Trong bài học này, chúng ta sẽ xây dựng một **Danh mục món ăn lấy dữ liệu từ API (Meals Catalog API Fetcher)** và một ứng dụng **Máy tính bỏ túi (Calculator)** hoàn chỉnh. Các dự án này giúp bạn làm quen sâu hơn với luồng dữ liệu, xử lý các tác vụ phụ (`useEffect`), quản lý lỗi gọi mạng, kiểm soát dữ liệu nhập và thiết kế bố cục lưới grid phức tạp.
+Trong bài học này, chúng ta sẽ xây dựng một **Meals Catalog API Fetcher** (tiêu thụ các REST API bên ngoài) và một ứng dụng **Máy tính (Calculator)** toán học hoàn chỉnh. Các dự án này giúp bạn thực hành luồng dữ liệu nâng cao, các side effect (`useEffect`), quản lý lỗi, kiểm tra dữ liệu nhập (inputs validation) và các bố cục lưới grid tương tác phức tạp.
 
 ---
 
-## 🍽️ Dự án 3: Danh mục món ăn Seafood (Meals API)
+## 🍽️ Dự án 3: Meals API Catalog
 
-Dự án này thực hiện gọi danh sách món ăn hải sản từ API bên ngoài, hiển thị dạng lưới thẻ card, đồng thời xử lý trạng thái đang tải (loading) và hiển thị thông báo lỗi.
+Dự án này lấy các món ăn từ một food API bên ngoài và hiển thị chúng dưới dạng bố cục lưới thẻ card, bao gồm cả các trạng thái loading và xử lý kiểm tra lỗi.
 
 ### Các khái niệm chính được thực hành:
-* Gọi dữ liệu trong `useEffect` và lưu trữ vào state.
-* Quản lý trạng thái đang tải (`loading`) và thông báo lỗi (`error`).
-* Thiết lập bố cục danh sách động sử dụng CSS Grid.
+* Lấy dữ liệu bên trong `useEffect` và lưu trữ vào state.
+* Quản lý trạng thái loading (`loading`) và thông báo lỗi (`error`).
+* Bố cục item động thông qua grid styling.
 
 ### Hướng dẫn triển khai từng bước (`Meals.jsx`)
 
-Tạo tệp component tại `src/components/Meals.jsx` và viết đoạn mã sau:
+Tạo tệp `src/components/Meals.jsx` và chèn đoạn mã sau:
 
 ```jsx
 import { useState, useEffect } from 'react';
@@ -31,12 +31,12 @@ export const Meals = () => {
 
     fetch("https://www.themealdb.com/api/json/v1/1/filter.php?c=Seafood")
       .then((res) => {
-        if (!res.ok) throw new Error("Không thể kết nối cơ sở dữ liệu món ăn!");
+        if (!res.ok) throw new Error("Could not fetch food database!");
         return res.json();
       })
       .then((data) => {
         if (active) {
-          // Lưu trữ 8 món ăn đầu tiên
+          // Store first 8 meals
           setItems(data.meals ? data.meals.slice(0, 8) : []);
           setLoading(false);
         }
@@ -49,16 +49,16 @@ export const Meals = () => {
       });
 
     return () => {
-      active = false; // Ngăn chặn cập nhật state khi component đã hủy (race condition)
+      active = false; // Prevent race condition updates
     };
   }, []);
 
-  if (loading) return <p style={styles.message}>Đang tải danh mục hải sản...</p>;
-  if (error) return <p style={styles.errorMessage}>Lỗi: {error}</p>;
+  if (loading) return <p style={styles.message}>Loading seafood catalog...</p>;
+  if (error) return <p style={styles.errorMessage}>Error: {error}</p>;
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>Dự án 3: Danh mục Hải sản qua API</h2>
+      <h2 style={styles.title}>Project 3: Seafood Meal API Catalog</h2>
       <div style={styles.grid}>
         {items.map(({ idMeal, strMeal, strMealThumb }) => (
           <div key={idMeal} style={styles.card}>
@@ -133,14 +133,14 @@ const styles = {
 
 ---
 
-## 🔢 Dự án 4: Máy tính bỏ túi toán học (Calculator)
+## 🔢 Dự án 4: Máy tính toán học
 
-Ứng dụng máy tính với thiết kế lưới grid, cho phép ghép nối và tính toán các biểu thức toán học dạng chuỗi.
+Một ứng dụng máy tính bố cục lưới grid, xử lý các biểu thức toán học được biểu diễn dưới dạng chuỗi.
 
-### ⚠️ Cảnh báo bảo mật: Rủi ro khi dùng hàm `eval()`
-Trong thực tế lập trình, hàm toàn cục `eval()` của JavaScript có thể thực thi bất kỳ đoạn mã độc nào trong chuỗi, tiềm ẩn rủi ro bảo mật nghiêm trọng (như tấn công XSS) nếu chuỗi nhập vào là từ người dùng. Trong React, giải pháp thay thế an toàn hơn là sử dụng hàm dựng `Function`:
+### ⚠️ Cảnh báo bảo mật: Rủi ro của `eval()`
+Trong thực tế tiêu chuẩn, hàm toàn cục `eval()` của JavaScript có thể thực thi các chuỗi tùy ý dưới dạng mã, gây ra những rủi ro bảo mật nghiêm trọng (tấn công XSS) nếu chuỗi đó được cung cấp bởi người dùng. Trong React, một giải pháp sandbox an toàn hơn là sử dụng hàm dựng (constructor) `Function`:
 ```javascript
-// Tính toán chuỗi biểu thức an toàn
+// Safely evaluate a math string
 const safeEvaluate = (expression) => {
   return Function(`"use strict"; return (${expression})`)();
 };
@@ -148,7 +148,7 @@ const safeEvaluate = (expression) => {
 
 ### Hướng dẫn triển khai từng bước (`Calculator.jsx`)
 
-Tạo tệp component tại `src/components/Calculator.jsx` và viết đoạn mã sau:
+Tạo tệp `src/components/Calculator.jsx` và chèn đoạn mã sau:
 
 ```jsx
 import { useState } from 'react';
@@ -158,7 +158,7 @@ export const Calculator = () => {
 
   const clear = () => setInput("");
   const append = (value) => {
-    // Tránh việc nhấn liên tiếp hai toán tử toán học
+    // Avoid double operators in succession
     const lastChar = input[input.length - 1];
     const operators = ["+", "-", "*", "/"];
     if (operators.includes(value) && operators.includes(lastChar)) return;
@@ -168,7 +168,7 @@ export const Calculator = () => {
   const calculate = () => {
     if (!input) return;
     try {
-      // Thực thi tính toán chuỗi biểu thức thông qua hàm Function an toàn hơn eval
+      // Evaluate string mathematically using the safer Function constructor
       const result = Function(`"use strict"; return (${input})`)();
       setInput(Number(result).toString());
     } catch {
@@ -178,7 +178,7 @@ export const Calculator = () => {
 
   return (
     <div style={calcStyles.wrapper}>
-      <h2 style={{ textAlign: "center", color: "#2c3e50" }}>Dự án 4: Máy tính React</h2>
+      <h2 style={{ textAlign: "center", color: "#2c3e50" }}>Project 4: React Calculator</h2>
       <div style={calcStyles.container}>
         <div style={calcStyles.display}>{input || "0"}</div>
         <div style={calcStyles.grid}>
@@ -282,41 +282,41 @@ const calcStyles = {
 
 ## 🧠 Kiểm tra kiến thức
 
-Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của bạn. Nhấp vào **Reveal Answer** để xác nhận câu trả lời.
+Trả lời các câu hỏi sau để kiểm tra mức độ hiểu của bạn về các dự án nhập môn này. Nhấp vào **Reveal Answer** để xác nhận.
 
-### 1. Tại sao cần viết hàm dọn dẹp (cleanup) cho các lời gọi API trong `useEffect`?
+### 1. Tại sao chúng ta cần một hàm cleanup trong `useFetch` hoặc các lời gọi API bên trong `useEffect`?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Nhằm ngăn chặn việc cập nhật trạng thái (state update) của các component đã bị hủy (unmounted) khỏi màn hình. Nếu kết quả API phản hồi chậm hơn thời gian component bị đóng lại, việc gọi set state sẽ kích hoạt cảnh báo rò rỉ bộ nhớ (memory leak) trong console. Cờ `active` trong hàm dọn dẹp sẽ giải quyết việc này.
+  Để ngăn việc cập nhật state trên các component đã bị unmount (gỡ khỏi màn hình). Nếu một lời gọi API hoàn tất sau khi component đã bị unmount, việc gọi hàm set state sẽ kích hoạt cảnh báo rò rỉ bộ nhớ (memory leak) trong console của trình duyệt. Sử dụng một cờ boolean `active` bên trong hàm cleanup của effect sẽ ngăn chặn điều này.
 </details>
 
-### 2. Tại sao hàm `eval()` gốc của JavaScript bị hạn chế sử dụng, và đâu là giải pháp thay thế an toàn?
+### 2. Tại sao hàm `eval()` gốc của JavaScript không được khuyến khích, và đâu là giải pháp thay thế an toàn hơn?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  `eval()` thực thi bất cứ văn bản nào truyền vào dưới dạng mã JS. Nếu người dùng chèn mã độc vào ô nhập, điều này dẫn đến tấn công XSS hoặc hack hệ thống. Giải pháp thay thế là tự dựng phạm vi hàm thông qua `Function("return (" + expression + ")")()`, hoặc sử dụng các thư viện phân tích biểu thức toán học chuyên dụng như `mathjs`.
+  `eval()` thực thi bất kỳ chuỗi nào dưới dạng mã JavaScript. Nếu người dùng có thể chèn văn bản độc hại vào input của bạn, nó có thể dẫn đến Cross-Site Scripting (XSS) hoặc thực thi mã từ xa (remote code execution). Một giải pháp thay thế an toàn hơn là tạo một phạm vi hàm sandbox bằng `Function("return (" + expression + ")")()`, hoặc sử dụng các thư viện phân tích biểu thức toán học như `mathjs`.
 </details>
 
-### 3. Thuộc tính `gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))"` có tác dụng gì?
+### 3. `gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))"` cải thiện tính responsive như thế nào?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Nó giúp lưới layout tự động co giãn thích ứng (responsive). Nó sẽ xếp nhiều cột nhất có thể trên một hàng, mỗi cột có chiều rộng tối thiểu là `220px`. Nếu màn hình rộng, các cột tự chia đều khoảng trống còn lại (`1fr`), giúp loại bỏ việc viết quá nhiều truy vấn CSS Media Queries.
+  Nó tự động xếp vừa số lượng cột grid nhiều nhất có thể trên màn hình. Mỗi cột được đảm bảo có chiều rộng tối thiểu là `220px`. Nếu không gian cho phép, các cột sẽ giãn ra để lấp đầy các đơn vị phần (fraction unit) còn lại (`1fr`) một cách đồng đều, loại bỏ nhu cầu viết các media query phức tạp.
 </details>
 
-### 4. Điều gì xảy ra khi bạn gọi dữ liệu trong `useEffect` nhưng không khai báo mảng phụ thuộc rỗng `[]`?
+### 4. Điều gì xảy ra khi bạn lấy dữ liệu bên trong `useEffect` mà không có mảng phụ thuộc rỗng `[]`?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Hàm gọi API sẽ chạy sau lần render đầu tiên, cập nhật state gây re-render component, chạy lại API, cập nhật state tiếp, tạo ra một vòng lặp vô hạn. Điều này sẽ spam máy chủ gọi API và làm treo trình duyệt.
+  API sẽ được gọi ở lần render đầu tiên, cập nhật state, kích hoạt re-render, gọi lại API, cập nhật state, và lặp vô hạn. Điều này sẽ spam máy chủ API và nhanh chóng làm treo tab trình duyệt.
 </details>
 
-### 5. Tại sao cần viết hàm `.catch()` ở cuối các chuỗi promises gọi dữ liệu?
+### 5. Tại sao chúng ta sử dụng `.catch()` ở cuối một chuỗi fetch `.then()`?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Hàm `.catch()` dùng để bắt các lỗi kết nối mạng (offline), lỗi máy chủ phản hồi chậm hoặc lỗi do bạn ném ra (throw) trong chuỗi xử lý. Không bắt lỗi sẽ dẫn đến lỗi Promise bị từ chối không xử lý (unhandled rejections), làm giao diện UI bị đơ mãi ở trạng thái Loading.
+  `.catch()` bắt mọi lỗi kết nối mạng, lỗi server timeout, hoặc các lỗi được ném (throw) thủ công xảy ra trong chuỗi promise. Việc không bắt được lỗi sẽ dẫn đến các unhandled promise rejection, khiến giao diện người dùng bị kẹt ở trạng thái loading.
 </details>
 
 ---
@@ -325,16 +325,16 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của b
 
 Áp dụng những gì bạn đã học vào dự án React của mình:
 
-### 🛠️ Bài tập 1: Bộ lọc danh mục cho Món ăn
-1. Mở file `Meals.jsx`.
-2. Thêm một thanh chọn danh mục gồm các nút bấm: "Seafood" (Hải sản), "Chicken" (Thịt gà), "Beef" (Thịt bò).
-3. Thiết lập biến state `category` mặc định là `"Seafood"`.
-4. Gọi lại API tương ứng mỗi khi `category` thay đổi bằng cách truyền nó vào mảng phụ thuộc của `useEffect`. Hiển thị danh mục món ăn tương ứng.
+### 🛠️ Bài tập 1: Bộ lọc danh mục cho Meals
+1. Mở `Meals.jsx`.
+2. Thêm một hàng các nút lọc ở đầu trang: "Seafood", "Chicken", "Beef".
+3. Thêm một biến state `category` được khởi tạo với giá trị `"Seafood"`.
+4. Kích hoạt lại lời gọi fetch trong `useEffect` mỗi khi `category` thay đổi bằng cách thêm nó vào mảng phụ thuộc. Render gallery món ăn khớp với category được chọn.
 
-### 🛠️ Bài tập 2: Tính năng Xóa từng ký tự (Backspace) cho Máy tính
-1. Mở file `Calculator.jsx`.
-2. Thêm nút xóa từng số có nhãn là `"⌫"` hoặc `"DEL"`.
-3. Khi bấm nút này, hãy cắt bỏ ký tự cuối cùng của chuỗi state `input` bằng phương thức slice:
+### 🛠️ Bài tập 2: Thêm chức năng Backspace cho Máy tính
+1. Mở `Calculator.jsx`.
+2. Thêm một nút backspace có nhãn `"⌫"` hoặc `"DEL"`.
+3. Nhấp vào nút này sẽ xóa ký tự cuối cùng của state chuỗi `input`:
    ```javascript
    const deleteLast = () => setInput((prev) => prev.slice(0, -1));
    ```

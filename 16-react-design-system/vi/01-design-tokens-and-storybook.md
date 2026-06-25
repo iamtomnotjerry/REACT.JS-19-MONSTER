@@ -1,160 +1,283 @@
-# Thiết kế Hệ thống Design Tokens & Tích hợp Storybook 📖
+# Design System & Design Tokens 📖
 
-Một **Hệ thống Thiết kế (Design System)** là một tập hợp các thành phần giao diện (UI components) có thể tái sử dụng, được hướng dẫn bởi các tiêu chuẩn rõ ràng, có thể lắp ghép lại với nhau để xây dựng bất kỳ số lượng ứng dụng nào. Trong bài học này, chúng ta sẽ tìm hiểu về **Design Tokens** (các biến thiết kế trực quan) và **Storybook** (công cụ xây dựng và tài liệu hóa các thành phần UI độc lập).
+Một **Design System** không chỉ đơn thuần là một thư mục chứa các component. Nó là bộ công cụ dùng chung — một phần là thiết kế, một phần là kỹ thuật — giúp một đội ngũ xây dựng nhiều sản phẩm trông và hoạt động một cách nhất quán. Bài học này tập trung vào **lý thuyết về design system** và các **design token** tạo nên sức mạnh cho chúng. (Storybook, công cụ để xây dựng và tài liệu hóa các component một cách độc lập, được nhắc qua ở đây và sẽ được đào sâu trong **§17**.)
 
 ---
 
-## ⚡ 1. Design Tokens là gì?
+## 💡 Khái niệm & Tổng quan
 
-**Design Tokens** là những "nguyên tử" (atoms) trực quan của một hệ thống thiết kế. Chúng đóng vai trò là "nguồn sự thật duy nhất" (single source of truth) cho các biến giao diện, đại diện cho khoảng cách (spacing), màu sắc (color choices), kích thước chữ (typography scales), bo góc (border radiuses), và bóng đổ (shadow parameters).
+Nếu bạn hỏi một designer "design system là gì?", họ sẽ trả lời rằng đó là một bộ UI kit, một bảng màu (color palette), một lưới typography, hay bộ iconography. Nếu bạn hỏi một developer, họ sẽ nói đó là một thư viện component, các style guide, hoặc tài liệu (documentation). **Sự thật là design system bao gồm tất cả những thứ đó** — một chút thiết kế và một chút kỹ thuật được gắn kết lại với nhau.
 
-Bằng cách trừu tượng hóa các giá trị thô thành các biến có tên gọi cụ thể, bạn đảm bảo tính nhất quán trên toàn bộ sản phẩm web:
+Một định nghĩa chính thức phổ biến:
+
+> Design system là một tập hợp toàn diện các tiêu chuẩn, hướng dẫn và component nhằm đảm bảo tính nhất quán và sự gắn kết trong việc thiết kế và phát triển một sản phẩm số. Nó đóng vai trò là ngôn ngữ chung và nguồn tài nguyên cho các designer, developer và những bên liên quan khác.
+
+Mô hình tư duy đơn giản nhất: **design system là một bộ công cụ để xây dựng các sản phẩm số**. Nó bao gồm mọi thứ bạn cần để thiết kế luôn nhất quán và trông giống nhau trên mọi màn hình và trang.
+
+> [!NOTE]
+> Design system **không phải** là sản phẩm. Nó là tập hợp các bộ phận và quy tắc có thể tái sử dụng mà bạn dùng để lắp ráp *nên* sản phẩm. Hãy xem nó như hộp gạch LEGO cộng với cuốn sách hướng dẫn — chứ không phải tòa lâu đài đã hoàn thành.
+
+> [!TIP]
+> Bạn không cần phải xây dựng design system lớn nhất hành tinh. Ngay cả một hệ thống nhỏ xíu — một vài màu sắc, một thang spacing, một button, và một card — cũng đã tự chứng minh giá trị của nó ngay lần đầu tiên một màu thương hiệu thay đổi và bạn chỉ cập nhật ở **một** nơi thay vì năm mươi nơi.
+
+---
+
+## 🧱 Các Khối Xây Dựng Cốt Lõi
+
+Một design system hoàn chỉnh được tạo thành từ các khối xây dựng phân lớp. Các lớp thấp hơn (nguyên tắc, token) định hình cho các lớp cao hơn (component, pattern, tài liệu).
+
+| Khối Xây Dựng         | Là Gì                                                                       | Ví Dụ Thực Tế                                  |
+| -------------------- | -------------------------------------------------------------------------- | ---------------------------------------------- |
+| **Design Principles** | Các hướng dẫn/triết lý cấp cao định hình mọi quyết định                      | "Đơn giản", "Ưu tiên khả năng tiếp cận (Accessibility first)", "Khả năng sử dụng (Usability)" |
+| **Style Guides**      | Các quy tắc trực quan cụ thể — typography, bảng màu, spacing, iconography     | Tiêu đề dùng 1.5rem / độ đậm 700; màu xanh thương hiệu là `#1F6FEB` |
+| **UI Components**     | Các phần tử giao diện tái sử dụng, được xây responsive và accessible mặc định | Button, form, modal, navigation bar           |
+| **Patterns**          | Các giải pháp lặp lại cho những vấn đề thường gặp                            | Bố cục card, lưới, dropdown menu, trạng thái rỗng (empty state) |
+| **Branding**          | Đảm bảo hệ thống phù hợp với bản sắc, tông giọng và giá trị của công ty       | Cách dùng logo, giọng văn (voice), màu thương hiệu, phong cách minh họa |
+| **Documentation**     | Hướng dẫn rõ ràng + best practice để *sử dụng* và *bảo trì* hệ thống          | "Dùng `<Button variant=\"danger\">` cho các hành động phá hủy" |
+| **Code**              | Phần triển khai front-end để dev tích hợp — React component, framework CSS    | Một gói npm `@acme/ui` đã được xuất bản         |
+| **Accessibility**     | Các khuyến nghị để sản phẩm có thể được sử dụng bởi người khuyết tật          | Tỷ lệ tương phản màu theo WCAG, điều hướng bằng bàn phím, ARIA role |
+
+### 🛒 Một Phép Ẩn Dụ Thực Tế
+
+Hãy tưởng tượng bạn đang xây dựng một **ứng dụng mua sắm (shopping app)** cho một thương hiệu và bạn muốn button, màu sắc, font, iconography, và bố cục trông nhất quán trên mọi màn hình.
+
+Hãy xem design system như **gian bếp của một chuỗi nhà hàng**. Chuỗi nhà hàng không phát minh lại món ăn ở mỗi địa điểm — nó chuẩn hóa các *nguyên liệu* (token: loại bột chính xác, tỷ lệ nước sốt chính xác), các *công thức* (component: cách lắp ráp một chiếc burger), và các *quy tắc bày trí* (pattern và tài liệu). Bất kỳ đầu bếp nào ở bất kỳ chi nhánh nào cũng làm ra cùng một món. Trong ứng dụng của bạn, bạn "đã có sẵn" các màu của mình (xám, xanh dương, đỏ, hổ phách, xanh lá, xanh ngọc…), typography, các icon, và các component — bạn chỉ việc **lấy chúng ra và sử dụng**, và ứng dụng tự động trở nên nhất quán.
+
+---
+
+## 🎨 Design Tokens — Những Nguyên Tử Của Hệ Thống
+
+**Design Tokens** là những giá trị nhỏ nhất, có tên gọi, đóng vai trò nguồn sự thật duy nhất trong một design system. Thay vì rải rác các giá trị thô như `#1F6FEB` hay `16px` khắp code của bạn, bạn đặt tên cho chúng một lần (`color-primary-500`, `spacing-md`) và tham chiếu đến cái tên đó ở mọi nơi. Thay đổi token, và mọi nơi tiêu thụ nó đều được cập nhật.
+
+> [!IMPORTANT]
+> Token là **độc lập với nền tảng (platform-agnostic)**. *Cùng* một token (`color-primary-500`) có thể biên dịch thành một CSS custom property cho web, một hằng số Swift cho iOS, và một tài nguyên XML cho Android. CSS custom property chỉ là **một** cách để biểu diễn token — chứ không phải định nghĩa của một token.
+
+Design token mang tính toàn diện — chúng bao trùm toàn bộ ngôn ngữ trực quan, không chỉ riêng màu sắc:
+
+### 1. Thang Màu (Color Scales)
+
+Mỗi màu mang ngữ nghĩa (primary, neutral, warning, danger, success, gray-scale) được mở rộng thành một **thang (scale)** gồm nhiều sắc độ. Một quy ước phổ biến chạy theo `50, 100, 200, … 900, 950`, trong đó số thấp là các sắc nhạt và số cao là các sắc đậm.
 
 ```css
-/* Các thuộc tính tùy chỉnh CSS (CSS custom properties) đại diện cho design tokens */
+/* CSS custom properties: a primary color SCALE, not a single color */
 :root {
-  --color-primary: #3498db;
-  --color-secondary: #2ecc71;
-  --color-dark: #2c3e50;
-  
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  
-  --font-size-sm: 0.875rem;
-  --font-size-md: 1rem;
-  --font-size-lg: 1.25rem;
-  
-  --border-radius-round: 8px;
+  --color-primary-50:  #e7f0ff;
+  --color-primary-100: #c2dbff;
+  --color-primary-500: #1f6feb; /* base / default */
+  --color-primary-900: #0a2a5e;
+  --color-primary-950: #061a3b;
+
+  /* Semantic roles map onto the scale */
+  --color-danger-500:  #ef4444;
+  --color-success-500: #22c55e;
+  --color-warning-500: #eab308;
+  --color-neutral-500: #6b7280;
+}
+```
+
+### 2. Spacing — Một Thang Số (Numeric Scale)
+
+Token spacing thường là một **thang số (numeric scale)** cố định với những cái tên thân thiện để bố cục "thở" một cách nhất quán. (Trong Figma chúng thường được mô hình hóa thành một bộ sưu tập "number scale".)
+
+```css
+:root {
+  --space-tiny:   2px;  /* tiny     */
+  --space-xs:     4px;  /* extra small */
+  --space-sm:     6px;  /* small    */
+  --space-md:     12px; /* medium   */
+  --space-lg:     16px; /* large    */
+  --space-xl:     20px; /* extra large */
+  --space-2xl:    24px; /* super large */
+  --space-huge:   32px; /* huge     */
+  --space-giant:  40px; /* gigantic */
+}
+```
+
+### 3. Typography
+
+```css
+:root {
+  --font-family-base: "Inter", system-ui, sans-serif;
+  --font-size-sm:  0.875rem;
+  --font-size-md:  1rem;
+  --font-size-lg:  1.25rem;
+  --font-weight-regular: 400;
+  --font-weight-bold:    700;
+  --line-height-body:    1.5;
+}
+```
+
+### 4. Border-Radius
+
+```css
+:root {
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px; /* perfect circle / pill */
+}
+```
+
+### 5. Opacity
+
+```css
+:root {
+  --opacity-opaque:           1;    /* fully visible      */
+  --opacity-semi:             0.8;  /* semi-opaque        */
+  --opacity-transparent:      0.5;  /* transparent        */
+  --opacity-light:            0.3;  /* light transparent  */
+  --opacity-very-transparent: 0.25; /* very transparent   */
+}
+```
+
+### 6. Shadows (Elevation)
+
+```css
+:root {
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.10);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 ```
 
 ---
 
-## ⚡ 2. Storybook: Phát triển UI Độc lập (Isolated UI Development)
+## 🔁 Quy Trình Figma → Tokens → Code
 
-**Storybook** là một công cụ mã nguồn mở dùng để xây dựng các thành phần UI trong môi trường độc lập. Thay vì render một component mới bên trong một ứng dụng phức tạp (nơi bạn phải điều hướng qua các màn hình, giả lập phản hồi API hoặc đăng nhập), bạn viết một "story" để xem và kiểm thử nó ngay lập tức trên một bảng điều khiển (dashboard) sandbox cục bộ.
+Token thường *bắt nguồn từ thiết kế* và *chảy vào kỹ thuật*. Hiểu được pipeline này là điều biến design system thành một ngôn ngữ chung thay vì hai silo tách rời.
 
-### Cài đặt
-Để thêm Storybook vào một dự án React hiện tại, chạy lệnh sau trong thư mục gốc của dự án:
+```text
+   ┌──────────────┐      ┌────────────────┐      ┌──────────────────┐
+   │    FIGMA     │ ───▶ │  DESIGN TOKENS │ ───▶ │       CODE       │
+   │ (design)     │      │ (source of     │      │ (CSS vars, JS,   │
+   │              │      │  truth, e.g.   │      │  iOS, Android)   │
+   │ styles +     │      │  JSON/W3C      │      │                  │
+   │ variables    │      │  tokens)       │      │                  │
+   └──────────────┘      └────────────────┘      └──────────────────┘
+```
+
+Một luồng điển hình, chính xác như cách một designer xây dựng nó trong Figma:
+
+1. **Quyết định các màu** cho hệ thống (dùng các công cụ palette để chọn một bộ màu hài hòa).
+2. **Tạo styles** cho những màu đó (ví dụ, một plugin *Styler* biến các mẫu màu thành Figma style).
+3. **Chuyển styles thành variables** (ví dụ, một bước *Styles → Variables*) để mỗi sắc độ trở thành một token có tên gọi, tái sử dụng được như `primary/500`.
+4. Thêm các **bộ sưu tập variable** khác: một *number scale* (tiny → gigantic), một bộ sưu tập *radius*, và một bộ sưu tập *opacities*.
+5. **Export/trích xuất** các variable và đưa chúng vào code dưới dạng CSS custom property (hoặc một tokens JSON được một build tool tiêu thụ).
+
+Một khi token tồn tại trong Figma dưới dạng variable, một designer có thể xây dựng một component (chẳng hạn một button) hoàn toàn từ `radius/sm`, `primary/500`, và `space/md` — và engineer tái tạo *chính xác* component đó vì cả hai phía đều tham chiếu cùng các token có tên gọi giống nhau.
+
+> [!WARNING]
+> Đừng bao giờ sao chép trực tiếp các mã hex thô từ file thiết kế vào component. Khoảnh khắc một designer chỉnh một sắc độ, mọi bản sao hardcode sẽ âm thầm lệch khỏi đồng bộ. Hãy luôn đi qua một **token có tên gọi** để một lần chỉnh sửa lan truyền đến mọi nơi.
+
+> [!TIP]
+> Nếu bạn không phải là designer, bạn có thể bỏ qua phần tác giả hóa trong Figma — nhưng hãy hiểu *kết quả đầu ra*. Trong một công ty thực tế, bạn sẽ hoặc được yêu cầu xây dựng hệ thống, hoặc tiêu thụ các token mà người khác tạo ra. Dù theo cách nào, token chính là bản hợp đồng giữa thiết kế và code.
+
+---
+
+## 📚 Một Ghi Chú Ngắn Về Storybook
+
+**Storybook** là một công cụ mã nguồn mở để xây dựng và tài liệu hóa các UI component **một cách độc lập (in isolation)** — bên ngoài ứng dụng đầy đủ, không cần routing, auth, hay giả lập API. Nó tỏa sáng với các design system và thư viện component **lớn/cấp doanh nghiệp (enterprise)**, và là thừa thãi đối với một trang portfolio nhỏ.
 
 ```bash
+# Add Storybook to an existing React project (covered in depth in §17)
 npx storybook@latest init
 ```
 
-Lệnh này sẽ tạo thư mục cấu hình `.storybook/`, thêm các script vào `package.json`, và tạo sẵn một thư mục mẫu `src/stories/`.
+Đó là tất cả những gì bạn cần ở đây — phần xử lý đầy đủ về story, Component Story Format (CSF), `args`, control, và `autodocs` nằm trong **§17 (Storybook)**.
 
 ---
 
-## 🧩 3. Viết Stories (Component Story Format - CSF)
+## 🧠 Kiểm Tra Kiến Thức
 
-Các story được viết bằng tiêu chuẩn **CSF (Component Story Format) 3.0** hiện đại. Một file story có tên định dạng `[ComponentName].stories.jsx` hoặc `.tsx`:
+Trả lời các câu hỏi sau để kiểm tra mức độ hiểu của bạn. Nhấp vào **Reveal Answer** để xác minh.
 
-### Component (`src/components/Badge.jsx`)
-```jsx
-export const Badge = ({ label, variant = "info" }) => {
-  const badgeStyles = {
-    padding: "5px 10px",
-    borderRadius: "20px",
-    fontSize: "0.85rem",
-    fontWeight: "bold",
-    display: "inline-block",
-    backgroundColor: variant === "success" ? "#2ecc71" : "#3498db",
-    color: "#fff"
-  };
+### 1. Tại sao "không có một định nghĩa duy nhất" cho design system, và câu trả lời trung thực là gì?
+<details>
+  <summary><b>Reveal Answer</b></summary>
 
-  return <span style={badgeStyles}>{label}</span>;
+  Bởi vì designer và developer mô tả nó theo những cách khác nhau — một designer gọi nó là UI kit / bảng màu / lưới typography, trong khi một developer gọi nó là thư viện component / style guide / tài liệu. Câu trả lời trung thực là design system **đồng thời là tất cả những thứ đó**: một chút thiết kế và một chút kỹ thuật. Nó là một bộ công cụ và ngôn ngữ dùng chung để xây dựng các sản phẩm nhất quán trên mọi màn hình và nền tảng.
+</details>
+
+### 2. Hãy kể tên ít nhất năm khối xây dựng cốt lõi của một design system.
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  Bất kỳ năm trong số: **Design Principles**, **Style Guides**, **UI Components**, **Patterns**, **Branding**, **Documentation**, **Code**, và **Accessibility**. Principle và token nằm ở nền móng; component và pattern xây dựng trên chúng; tài liệu và code làm cho chúng có thể sử dụng và bảo trì được.
+</details>
+
+### 3. Tại sao design token được mô tả là "độc lập với nền tảng (platform-agnostic)", và CSS custom property liên hệ với chúng như thế nào?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  Một token là một giá trị trừu tượng có tên gọi (ví dụ, `color-primary-500`) độc lập với bất kỳ công nghệ nào. *Cùng* một token có thể biên dịch thành một CSS custom property cho web, một hằng số Swift cho iOS, và một tài nguyên XML cho Android. Do đó CSS custom property chỉ là **một cách biểu diễn** token cho web — chứ không phải định nghĩa của bản thân token.
+</details>
+
+### 4. Ngoài màu sắc, hãy liệt kê các danh mục token khác mà một design system toàn diện định nghĩa.
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  **Spacing** (một thang số: tiny → gigantic), **Typography** (font family, kích thước, độ đậm, line-height), **Border-radius** (xs → full), **Opacity** (opaque → very transparent), và **Shadows/elevation**. Bản thân màu sắc được biểu diễn dưới dạng một **thang (scale)** (50–950) cho mỗi vai trò ngữ nghĩa (primary, neutral, warning, danger, success, gray-scale), chứ không phải một giá trị đơn lẻ.
+</details>
+
+### 5. Hãy mô tả quy trình Figma → tokens → code và tại sao nó quan trọng.
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  Token bắt nguồn từ thiết kế và chảy đến kỹ thuật: **(1)** quyết định màu sắc, **(2)** tạo styles từ chúng, **(3)** chuyển styles thành Figma variable (token có tên gọi như `primary/500`), **(4)** thêm các bộ sưu tập number-scale, radius và opacity, **(5)** export/trích xuất các variable đó vào code dưới dạng CSS custom property hoặc một tokens JSON. Nó quan trọng vì cả designer và developer đều tham chiếu *cùng các token có tên gọi giống nhau*, nên một lần chỉnh sửa lan truyền đến mọi nơi và giao diện được triển khai khớp chính xác với thiết kế — token trở thành bản hợp đồng giữa thiết kế và code.
+</details>
+
+---
+
+## 💻 Bài Tập Thực Hành
+
+Áp dụng những gì bạn đã học vào môi trường dự án của mình.
+
+### 🛠️ Bài tập 1: Tác giả hóa một file token và tiêu thụ nó trong một component
+
+1. Tạo một file `src/styles/tokens.css` và định nghĩa **ít nhất bốn danh mục token**: một *thang* màu (ví dụ, `--color-primary-100/500/900`), một thang spacing (`--space-sm/md/lg`), một `--radius-md`, và một `--opacity-semi`.
+2. Import file đó một lần tại gốc ứng dụng (ví dụ, trong `main.tsx` hoặc `index.css` thông qua `@import "./styles/tokens.css";`).
+3. Tạo `src/components/InfoCard.tsx` với các props: `title` (string), `description` (string), và `borderTheme` (một chuỗi màu).
+4. Style cho card **chỉ thông qua token** — dùng `var(--space-lg)` cho padding, `var(--radius-md)` cho các góc, và `var(--shadow-md)` (thêm nó vào file token) cho elevation. **Không** hardcode bất kỳ giá trị pixel hay hex nào trong component.
+5. Render hai biến thể:
+   - `Default`: card tiêu chuẩn.
+   - `Featured`: một viền vàng dày sử dụng `borderTheme`.
+6. Thay đổi một giá trị token trong `tokens.css` (ví dụ, tăng `--space-lg` từ `16px` lên `24px`) và xác nhận mọi card đều được cập nhật mà không cần đụng đến file component.
+
+```tsx
+// src/components/InfoCard.tsx
+type InfoCardProps = {
+  title: string;
+  description: string;
+  borderTheme?: string; // a color token reference, e.g. var(--color-warning-500)
+};
+
+export const InfoCard = ({ title, description, borderTheme }: InfoCardProps) => {
+  return (
+    <article
+      style={{
+        // Every value is a token reference — no hardcoded raw values
+        padding: "var(--space-lg)",
+        borderRadius: "var(--radius-md)",
+        boxShadow: "var(--shadow-md)",
+        border: `2px solid ${borderTheme ?? "var(--color-neutral-500)"}`,
+        fontFamily: "var(--font-family-base)",
+      }}
+    >
+      <h3 style={{ fontSize: "var(--font-size-lg)", fontWeight: "var(--font-weight-bold)" }}>
+        {title}
+      </h3>
+      <p style={{ fontSize: "var(--font-size-md)", lineHeight: "var(--line-height-body)" }}>
+        {description}
+      </p>
+    </article>
+  );
 };
 ```
 
-### File Story (`src/components/Badge.stories.jsx`)
-```jsx
-import { Badge } from './Badge';
+### 🛠️ Bài tập 2: Ánh xạ các khối xây dựng của một design system vào dự án của bạn
 
-// 1. Export mặc định định nghĩa metadata của component và vị trí trên thanh bên (sidebar)
-export default {
-  title: 'Design System/Atoms/Badge', // Cấu trúc phân cấp trên sidebar
-  component: Badge,
-  tags: ['autodocs'], // Tự động tạo tab tài liệu API
-  argTypes: {
-    variant: {
-      control: 'select', // Render hộp chọn điều khiển trên dashboard Storybook
-      options: ['info', 'success'],
-    },
-  },
-};
-
-// 2. Các export được đặt tên định nghĩa từng biến thể câu chuyện (story variant) để kiểm thử
-export const Info = {
-  args: {
-    label: "Information Tag",
-    variant: "info",
-  },
-};
-
-export const Success = {
-  args: {
-    label: "Task Approved",
-    variant: "success",
-  },
-};
-```
-
-Để chạy môi trường Storybook cục bộ, thực thi lệnh: `npm run storybook`.
-
----
-
-## 🧠 Kiểm tra Kiến thức
-
-Trả lời các câu hỏi sau để kiểm tra mức độ hiểu biết của bạn về hệ thống thiết kế. Nhấp vào **Reveal Answer** để xác minh câu trả lời.
-
-### 1. Design Tokens là gì, và tại sao chúng được ưa chuộng hơn các giá trị hardcode?
-<details>
-  <summary><b>Reveal Answer</b></summary>
-
-  Design Tokens là các biến độc lập với nền tảng đại diện cho các tham số thiết kế trực quan (màu sắc, kích thước, kiểu chữ). Chúng được ưa chuộng vì đóng vai trò là **nguồn sự thật duy nhất (single source of truth)**. Nếu màu sắc thương hiệu thay đổi, bạn chỉ cần cập nhật định nghĩa token ở một nơi duy nhất, và nó sẽ tự động lan truyền đến tất cả các component, tránh các lỗi do tìm kiếm và thay thế thủ công.
-</details>
-
-### 2. Phát triển component "độc lập" (in isolation) có nghĩa là gì?
-<details>
-  <summary><b>Reveal Answer</b></summary>
-
-  Nó có nghĩa là render và lập trình các component bên ngoài codebase của ứng dụng chính. Trong Storybook, một component được tải trên một màn hình sandbox sạch sẽ mà không phụ thuộc vào truy vấn cơ sở dữ liệu, logic điều hướng router, hoặc cấu hình trạng thái phức tạp, giúp việc phát triển, kiểm thử và thiết kế giao diện nhanh hơn đáng kể.
-</details>
-
-### 3. `args` trong các story của Storybook là gì?
-<details>
-  <summary><b>Reveal Answer</b></summary>
-
-  `args` đại diện cho **props** của component. Thiết lập `args` bên trong một story sẽ định nghĩa các thuộc tính mặc định (dữ liệu đầu vào) mà Storybook sẽ truyền qua để render biến thể component cụ thể đó trên màn hình.
-</details>
-
-### 4. Lợi ích của thuộc tính `tags: ['autodocs']` bên trong export mặc định CSF là gì?
-<details>
-  <summary><b>Reveal Answer</b></summary>
-
-  Nó tự động tạo một **tab Docs** chuyên dụng trong dashboard Storybook của bạn. Tab này ghi lại các tài liệu hướng dẫn API của component, tạo bảng mô tả thuộc tính (props description tables), và cung cấp các ví dụ mã có thể sao chép-dán cho các lập trình viên khác sử dụng.
-</details>
-
-### 5. Các story của Storybook có thể tái sử dụng cho các mục đích kiểm thử khác không?
-<details>
-  <summary><b>Reveal Answer</b></summary>
-
-  Có. Vì các story CSF là các đối tượng ES6 chuẩn xuất bản (export) các component và props, bạn có thể import chúng trực tiếp vào các bài kiểm thử đơn vị (sử dụng Vitest/RTL) hoặc kiểm thử tích hợp để xác minh việc hiển thị giao diện và các hành động click chuột, giúp tránh việc phải lặp lại cấu hình thiết lập.
-</details>
-
----
-
-## 💻 Bài tập Thực hành
-
-Áp dụng những gì bạn đã học vào môi trường dự án của mình:
-
-### 🛠️ Bài tập 1: Tạo một component Card và Story của nó
-1. Tạo một component `InfoCard.tsx` (sử dụng phần mở rộng `.tsx`).
-2. Thiết lập các props: `title` (string), `description` (string), và `borderTheme` (màu sắc đường viền dạng chuỗi).
-3. Định dạng kiểu dáng (style) cho thẻ card sử dụng các design tokens (ví dụ như `--spacing-lg` cho phần đệm - padding).
-4. Tạo một file story `InfoCard.stories.tsx`.
-5. Định nghĩa hai câu chuyện (stories):
-   - `Default`: Hiển thị thẻ card tiêu chuẩn.
-   - `Featured`: Thẻ card hiển thị viền vàng dày (`borderTheme` màu vàng).
-6. Xác minh story hiển thị chính xác trong sandbox Storybook và kiểm tra xem bảng điều khiển controls có cho phép bạn chỉnh sửa nội dung trực tiếp hay không.
+1. Mở bất kỳ ứng dụng nhỏ nào bạn đã xây dựng. Trên giấy (hoặc trong một file markdown), liệt kê những khối nào trong số **tám khối xây dựng** (principle, style guide, UI component, pattern, branding, documentation, code, accessibility) mà nó hiện đang có, và những khối nào còn thiếu.
+2. Đối với một khối còn thiếu — ví dụ **Accessibility** — hãy viết một cải tiến cụ thể: chọn hai token màu được dùng cùng nhau (chữ trên nền) và xác minh chúng đáp ứng **tỷ lệ tương phản WCAG AA tối thiểu 4.5:1**. Điều chỉnh sắc độ token (ví dụ, chuyển từ `--color-neutral-400` sang `--color-neutral-600`) cho đến khi nó đạt yêu cầu.
+3. Viết một mục **tài liệu (documentation)** dài một đoạn mô tả *khi nào* nên dùng token màu `primary` so với `danger` (ví dụ, "`danger` được dành riêng cho các hành động phá hủy, không thể hoàn tác"). Điều này biến các token thô thành một hệ thống có thể sử dụng và bảo trì được.

@@ -2,6 +2,32 @@
 
 The **`useReducer`** Hook is React’s preferred solution for managing complex state structures, multi-action states, or state transactions where the next state depends heavily on the previous state. It is the underlying architecture that tools like Redux are built upon.
 
+---
+
+## 📖 Concept & Overview
+
+`useReducer` is a sibling of `useState`. While `useState` is ideal for simple, independent values, `useReducer` shines when your state is a **complex object** with multiple sub-values, or when the **next state depends on the previous state** through several related actions. Instead of scattering many `setState` calls across your component, you centralize *all* update logic into a single, predictable function called the **reducer**.
+
+The signature looks like this:
+
+```jsx
+const [state, dispatch] = useReducer(reducer, initialState);
+```
+
+- **`initialState`**: the starting value for the state when the component first mounts (e.g. `{ count: 0 }` for a counter app).
+- **`reducer`**: a function describing *how* the state should change based on an action. It takes the current `state` and an `action`, and returns the **new** state.
+- **`state`**: the current state value you read inside your component (JSX).
+- **`dispatch`**: a function you call to *send* an action to the reducer, which then updates the state.
+
+> [!NOTE]
+> The reducer **must be a pure function**. Given the same `state` and `action`, it must always return the same result, with **no side effects** (no API calls, no `Math.random()`, no mutating external variables, no `Date.now()` inside the reducer body). Purity is what makes `useReducer` predictable and trivially unit-testable.
+
+> [!WARNING]
+> **Never mutate the existing state — always return a brand-new object or array.** Writing `state.count++` or `state.items.push(...)` breaks React’s **referential equality** check, so React won’t detect the change and the UI will silently fail to re-render. Always spread the old state into a new object: `return { ...state, count: state.count + 1 }`.
+
+> [!TIP]
+> If your component has many `useState` calls whose updates are tangled together (e.g. a form, a wizard, or a cart), that is your signal to reach for `useReducer`. Consolidating logic into one reducer keeps update rules in a single readable place.
+
 ### 💡 Real-World Analogy: The Bank Teller
 Imagine you want to deposit money into a bank.
 - **`useState`**: You walk directly into the bank vault, pick up cash, and count it yourself. This is fine for simple wallets but dangerous for complex operations.
@@ -33,7 +59,50 @@ graph LR
 
 ---
 
-## 🧩 2. Comprehensive Code Example: Todo Management
+## 🔢 2. A Minimal Counter Reducer (from the lesson)
+
+Before the bigger Todo example, here is the simplest possible reducer — a counter. Notice how every case **returns a copy** of the state (`...state`) and never mutates it:
+
+```jsx
+import { useReducer } from 'react';
+
+// 1. The initial state is a complex object so we can grow it later
+const initialState = { count: 0 };
+
+// 2. The pure reducer: what are we updating, and how?
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'increment':
+      // Copy the whole state, then override only `count`
+      return { ...state, count: state.count + 1 };
+    case 'decrement':
+      return { ...state, count: state.count - 1 };
+    case 'reset':
+      return { ...state, count: 0 };
+    default:
+      // Unknown action types must return the state unchanged
+      return state;
+  }
+};
+
+const Counter = () => {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  return (
+    <div>
+      <h1>Count: {state.count}</h1>
+      {/* dispatch sends an action object to the reducer */}
+      <button onClick={() => dispatch({ type: 'increment' })}>+</button>
+      <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
+      <button onClick={() => dispatch({ type: 'reset' })}>Reset</button>
+    </div>
+  );
+};
+```
+
+---
+
+## 🧩 3. Comprehensive Code Example: Todo Management
 
 Let's build a clean Todo component managing additions, toggling completion, and deletion of tasks:
 
@@ -93,9 +162,12 @@ const TodoApp = () => {
 };
 ```
 
+> [!TIP]
+> Because the action carries a `payload`, the **event handler** is where you do any side-effect work (read an input, call an API, generate an id) *before* dispatching. The reducer itself only receives the clean, finished data — keeping it pure.
+
 ---
 
-## 🚀 3. When to use `useState` vs. `useReducer`
+## 🚀 4. When to use `useState` vs. `useReducer`
 
 | Criteria | `useState` | `useReducer` |
 | :--- | :--- | :--- |
@@ -156,15 +228,19 @@ Answer these questions to check your understanding of `useReducer`. Click **Reve
 Apply what you learned in your React project:
 
 ### 🛠️ Exercise 1: Multi-Step Counter
-1. Create a component `AdvancedCounter.jsx`.
-2. Define a reducer to manage a count value.
+1. Create a file `counterReducer.js` and inside it define `initialState = { count: 0 }` plus a pure `counterReducer(state, action)` function. Export both.
+2. Create a component `AdvancedCounter.jsx` that uses the `useReducer` hook with this reducer.
 3. Support five action types:
    - `'INCREMENT'`: adds 1.
    - `'DECREMENT'`: subtracts 1.
    - `'INCREASE_BY'`: adds an amount passed via `payload`.
    - `'DECREASE_BY'`: subtracts an amount passed via `payload`.
    - `'RESET'`: resets count to 0.
-4. Render the count value and buttons triggering each of these dispatched actions, including an input field to specify the custom step payloads.
+4. Render the count value and buttons triggering each of these dispatched actions, including an input field (a `useState` form value) to specify the custom step payloads.
+5. **Important:** when dispatching `INCREASE_BY` / `DECREASE_BY`, convert the input string to a number (`Number(inputValue)` or `+inputValue`) and clear the input afterwards by resetting it to `0`.
+
+> [!WARNING]
+> In every case of your reducer, return `{ ...state, count: ... }` — never write `state.count++`. Mutating the object directly will stop React from re-rendering.
 
 ### 🛠️ Exercise 2: Shopping Cart Manager
 1. Create a component `ShoppingCart.jsx`.
@@ -175,3 +251,6 @@ Apply what you learned in your React project:
    - `'UPDATE_QUANTITY'`: Update the item's quantity via action payload data (`id` and `quantity`).
    - `'CLEAR_CART'`: Clear the cart back to an empty array.
 4. Render the cart list, item quantities, single item prices, a total cart checkout amount, and buttons linking to the dispatched handlers.
+
+> [!TIP]
+> For `ADD_ITEM`, use `state.map(...)` to immutably bump the quantity of an existing item, and `[...state, newItem]` to append a new one — both return fresh arrays so React detects the change.

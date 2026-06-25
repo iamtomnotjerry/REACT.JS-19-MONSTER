@@ -32,7 +32,7 @@ Trong các dự án React hiện đại, **arrow functions (`rafce`)** được 
 - Chúng hỗ trợ cú pháp rút gọn trả về trực tiếp (implicit returns) cho các phần tử UI nhỏ gọn.
 - Ví dụ về mã nguồn được tạo ra bởi lệnh `rafce`:
 ```jsx
-import React from 'react' // Lưu ý: Dòng import này thực chất là không bắt buộc trong React 19!
+import React from 'react' // Note: This import is actually optional in React 19!
 
 const Header = () => {
   return (

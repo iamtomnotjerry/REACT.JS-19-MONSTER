@@ -1,252 +1,1032 @@
-# Tích hợp Giao diện Quản trị Doanh nghiệp FullStack 🌐
+# Tích hợp Dashboard Doanh nghiệp FullStack 🌐
 
-Cột mốc cuối cùng của khóa học này sẽ tập hợp mọi khái niệm chúng ta đã học—React 19, TypeScript, quản lý trạng thái (Redux Toolkit), styling, và tích hợp API—vào một **Hệ thống Quản trị Doanh nghiệp FullStack (FullStack Enterprise Dashboard)** sẵn sàng cho môi trường production.
+Cột mốc cuối cùng của khóa học này tập hợp mọi khái niệm chúng ta đã học—React 19, TypeScript, quản lý state (Redux Toolkit), styling, và tích hợp API—vào một **Movie Dashboard FullStack** đạt chuẩn production.
 
-Trong bài học này, chúng ta sẽ tìm hiểu về thiết kế kiến trúc, lớp tích hợp API (RTK Query), và cách triển khai các component phân tích dữ liệu thời gian thực.
+Trong bài học này, chúng ta xây dựng dự án từ đầu đến cuối: một backend **Express + MongoDB** (authentication, movies, genres, reviews) và một frontend **React + RTK Query** tiêu thụ nó, bao gồm cả một dashboard admin được bảo vệ. Đây là một bài học dài có chủ đích—hãy xem mỗi phần như một checkpoint có thể xây dựng được.
+
+---
+
+## 🧭 Khái niệm & Tổng quan
+
+Một dashboard fullstack là hai ứng dụng phối hợp với nhau: một **frontend** render giao diện và một **backend** sở hữu dữ liệu cùng các quy tắc. Frontend không bao giờ giao tiếp trực tiếp với database—nó hỏi backend, và backend quyết định ai được phép làm gì. Authentication, validation, và authorization đều nằm trên server vì client có thể bị can thiệp.
+
+Hãy hình dung hệ thống như một **rạp chiếu phim chỉ dành cho thành viên**. Backend là tòa nhà: quầy vé (login/register), nhân viên bảo vệ ở cửa phòng chiếu (auth middleware), người quản lý duy nhất có quyền thay đổi lịch chiếu (admin authorization), và kho lưu trữ phim cùng các đánh giá (database). Frontend là sảnh chờ và các poster mà mọi người đều thấy. Khách có thể xem poster, nhưng chỉ người có vé mới được để lại review, và chỉ người quản lý mới được thêm hoặc xóa phim.
+
+> [!NOTE]
+> Chúng ta chạy **hai tiến trình**: backend (Express trên port 3000) và frontend (Vite dev server). Package `concurrently` cho phép một lệnh `npm run fullstack` duy nhất khởi động cả hai cùng lúc, trong khi một **proxy** của Vite chuyển tiếp các lời gọi `/api/*` đến backend để trình duyệt thấy chúng cùng một origin.
+
+> [!TIP]
+> Giữ những thứ bí mật ở server. JWT signing secret, chuỗi kết nối Mongo, và việc băm mật khẩu đều nằm ở backend. Frontend chỉ giữ một tham chiếu phiên ngắn hạn (trong trường hợp của chúng ta là một cookie `httpOnly` mà trình duyệt tự động gửi đi).
+
+### Trách nhiệm của Frontend và Backend
+
+| Khía cạnh | Backend (Express/Mongo) | Frontend (React/RTK Query) |
+| --- | --- | --- |
+| Sở hữu dữ liệu | Mongoose models + MongoDB | Bản sao được cache qua RTK Query |
+| Authentication | Băm mật khẩu, ký JWT, set cookie | Lưu thông tin user, gửi cookie |
+| Authorization | Middleware `authenticate` + `authorizeAdmin` | Ẩn/bảo vệ các route admin trong UI |
+| Validation | Trường bắt buộc, tính duy nhất, mã lỗi | Kiểm tra form thân thiện + toasts |
+| Nguồn chân lý | Có — quyết định cuối cùng cho mọi lần ghi | Không — lạc quan, re-fetch khi invalidation |
 
 ---
 
 ## ⚡ 1. Kiến trúc Hệ thống & Lược đồ Quan hệ
 
-Một trang quản trị doanh nghiệp hoạt động dựa trên dữ liệu có cấu trúc. Đối với dự án này, hệ thống của chúng ta giám sát ba nguồn tài nguyên chính: **Users (Người dùng)**, **Movies (Phim)**, và **Comments (Bình luận)**.
+Dashboard của chúng ta giám sát ba tài nguyên cốt lõi: **Users**, **Movies**, và **Reviews/Comments**, với **Genres** phân loại các phim.
 
 ```mermaid
 erDiagram
-    USER ||--o{ COMMENT : writes
-    MOVIE ||--o{ COMMENT : has
+    USER ||--o{ REVIEW : writes
+    MOVIE ||--o{ REVIEW : has
+    GENRE ||--o{ MOVIE : categorizes
     USER {
         string id PK
-        string name
-        string role
+        string username
+        string email
+        string password
+        bool   isAdmin
     }
     MOVIE {
         string id PK
-        string title
-        string year
+        string name
+        number year
         string image
+        string genre FK
     }
-    COMMENT {
+    REVIEW {
         string id PK
-        string text
-        string userId FK
-        string movieId FK
+        string comment
+        string user FK
+        number rating
+    }
+    GENRE {
+        string id PK
+        string name
     }
 ```
 
-### Các thách thức kỹ thuật cốt lõi cần giải quyết:
-1. **Đồng bộ hóa Trạng thái (State Synchronization)**: Tự động cập nhật các bộ đếm trên UI khi có hành động thêm/xóa dữ liệu xảy ra.
-2. **Truy vấn thăm dò Thời gian thực (Real-Time Polling)**: Giữ cho các chỉ số thống kê lượt truy cập đồng bộ với cơ sở dữ liệu theo thời gian thực.
-3. **Vòng đời Xác thực (Authentication Lifecycles)**: Quản lý các bộ bảo vệ tuyến đường (route guards), phiên làm việc (sessions), và bảo mật các yêu cầu API.
+### Cấu trúc thư mục backend
+
+```bash
+my-movies/
+├── backend/
+│   ├── config/
+│   │   └── db.js            # Mongoose connection
+│   ├── controllers/
+│   │   ├── userController.js
+│   │   ├── genreController.js
+│   │   └── movieController.js
+│   ├── middlewares/
+│   │   ├── asyncHandler.js  # wraps async controllers
+│   │   └── authMiddleware.js# authenticate + authorizeAdmin
+│   ├── models/
+│   │   ├── User.js
+│   │   ├── Movie.js
+│   │   └── Genre.js
+│   ├── routes/
+│   │   ├── userRoutes.js
+│   │   ├── genreRoutes.js
+│   │   └── movieRoutes.js
+│   ├── utils/
+│   │   └── createToken.js   # signs JWT + sets cookie
+│   └── index.js             # Express entry point
+└── frontend/                # Vite + React app
+```
 
 ---
 
-## ⚡ 2. Lớp Truy vấn API (RTK Query)
+## 🏗️ 2. Thiết lập Backend: Express, Mongoose & Concurrency
 
-Để quản lý bộ nhớ đệm (caching), trạng thái tải (loading states), và cập nhật mạng hiệu quả, chúng ta sử dụng Redux Toolkit Query (RTKQ). Dưới đây là cấu hình API slice cốt lõi đóng vai trò làm cổng kết nối frontend với backend:
+Đầu tiên khởi tạo dự án Node ở thư mục gốc của dự án (không phải bên trong `frontend`/`backend`) và cài đặt các dependency của backend.
 
-```typescript
-// src/store/apiSlice.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+```bash
+# From the project root (e.g. my-movies/)
+npm init -y
 
-export interface User {
-  id: string;
-  name: string;
-  role: string;
+# Backend dependencies
+npm i bcryptjs body-parser concurrently cookie-parser dotenv \
+      express jsonwebtoken mongoose multer
+
+# nodemon for auto-reload during development
+npm i -D nodemon
+```
+
+Trong file `package.json` ở thư mục gốc, đặt `"type": "module"` để chúng ta có thể dùng cú pháp `import` của ES module, sau đó cấu hình các script chạy frontend và backend cùng nhau.
+
+```json
+// package.json (root)
+{
+  "type": "module",
+  "scripts": {
+    "frontend": "cd frontend && npm run dev",
+    "backend": "nodemon backend/index.js",
+    "fullstack": "concurrently \"npm run backend\" \"npm run frontend\""
+  }
 }
+```
 
-export interface Movie {
-  id: string;
-  name: string;
-  year: number;
-  image: string;
-  reviewsCount: number;
-}
+Tạo file môi trường. **Không bao giờ commit `.env`**—thêm `node_modules` và `.env` vào `.gitignore`.
 
-export const dashboardApi = createApi({
-  reducerPath: 'dashboardApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'https://api.my-dashboard.com/v1/' }),
-  tagTypes: ['Users', 'Movies'],
+```bash
+# .env
+PORT=3000
+MONGO_URI='mongodb+srv://<user>:<pass>@cluster.mongodb.net/movies-app'
+JWT_SECRET='replace-with-a-long-random-string'
+NODE_ENV=development
+```
+
+### Kết nối MongoDB (`config/db.js`)
+
+```js
+// backend/config/db.js
+import mongoose from "mongoose";
+
+// Connect to MongoDB using the URI from environment variables
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("Successfully connected to MongoDB 👍");
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    process.exit(1); // Stop the app if the database is unreachable
+  }
+};
+
+export default connectDB;
+```
+
+### Điểm vào của Express (`index.js`)
+
+```js
+// backend/index.js
+import express from "express";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import connectDB from "./config/db.js";
+import userRoutes from "./routes/userRoutes.js";
+import genreRoutes from "./routes/genreRoutes.js";
+import movieRoutes from "./routes/movieRoutes.js";
+
+// Configuration
+dotenv.config();
+connectDB();
+
+const app = express();
+
+// Middlewares: parse JSON bodies, URL-encoded data, and cookies
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+const PORT = process.env.PORT || 3000;
+
+// Routes
+app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/genre", genreRoutes);
+app.use("/api/v1/movies", movieRoutes);
+
+app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+```
+
+> [!WARNING]
+> Thứ tự của middleware rất quan trọng. `express.json()` phải chạy **trước** các route của bạn, nếu không `req.body` sẽ là `undefined` khi một controller cố đọc nó. Tương tự, đăng ký `cookieParser()` trước bất kỳ route nào đọc `req.cookies`.
+
+Khởi động backend riêng trước để xác nhận database kết nối được:
+
+```bash
+npm run backend
+# => Server is running on port 3000
+# => Successfully connected to MongoDB 👍
+```
+
+---
+
+## 👤 3. User Model & Băm Mật khẩu
+
+User schema lưu trữ thông tin đăng nhập và một cờ `isAdmin`. `timestamps: true` của Mongoose tự động thêm `createdAt`/`updatedAt`.
+
+```js
+// backend/models/User.js
+import mongoose from "mongoose";
+
+const userSchema = mongoose.Schema(
+  {
+    username: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    isAdmin: { type: Boolean, required: true, default: false },
+  },
+  { timestamps: true } // adds createdAt & updatedAt automatically
+);
+
+const User = mongoose.model("User", userSchema);
+export default User;
+```
+
+> [!WARNING]
+> **Không bao giờ lưu mật khẩu dạng plaintext.** Chúng ta băm bằng `bcryptjs` trước khi lưu. Băm là một chiều: ngay cả khi database bị rò rỉ, mật khẩu gốc cũng không thể khôi phục được, và chúng ta xác minh đăng nhập bằng cách băm lại lần nhập và so sánh.
+
+---
+
+## 🔑 4. Tạo JWT Token trong Cookie httpOnly
+
+Khi một user đăng ký hoặc đăng nhập, chúng ta ký một JWT chứa id của họ và lưu nó trong một cookie `httpOnly`. Trình duyệt sau đó tự động gửi nó trong mọi request—không phải xử lý header thủ công, và JavaScript không thể đọc nó (chống XSS).
+
+```js
+// backend/utils/createToken.js
+import jwt from "jsonwebtoken";
+
+const generateToken = (res, userId) => {
+  // Sign a token with the user id; expires in 30 days
+  const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
+
+  // Set the token as an httpOnly cookie
+  res.cookie("jwt", token, {
+    httpOnly: true,                                  // JS in the browser cannot read it
+    secure: process.env.NODE_ENV !== "development",  // HTTPS only in production
+    sameSite: "strict",                              // CSRF protection
+    maxAge: 30 * 24 * 60 * 60 * 1000,                // 30 days in ms
+  });
+
+  return token;
+};
+
+export default generateToken;
+```
+
+---
+
+## 🛡️ 5. Auth Middleware: `authenticate` & `authorizeAdmin`
+
+Chúng ta bọc các async controller trong một `asyncHandler` nhỏ để không phải lặp lại `try/catch` ở khắp nơi, sau đó xây dựng hai bộ bảo vệ.
+
+```js
+// backend/middlewares/asyncHandler.js
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch((error) => {
+    res.status(500).json({ message: error.message });
+  });
+};
+
+export default asyncHandler;
+```
+
+```js
+// backend/middlewares/authMiddleware.js
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+import asyncHandler from "./asyncHandler.js";
+
+// Check that the request carries a valid JWT cookie
+const authenticate = asyncHandler(async (req, res, next) => {
+  const token = req.cookies.jwt; // read the cookie we set on login
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      // Attach the user (without the password) to the request
+      req.user = await User.findById(decoded.userId).select("-password");
+      next();
+    } catch (error) {
+      res.status(401);
+      throw new Error("Not authorized, token failed.");
+    }
+  } else {
+    res.status(401);
+    throw new Error("Not authorized, no token.");
+  }
+});
+
+// Allow only admins past this point
+const authorizeAdmin = (req, res, next) => {
+  if (req.user && req.user.isAdmin) {
+    next();
+  } else {
+    res.status(401).send("Not authorized as an admin.");
+  }
+};
+
+export { authenticate, authorizeAdmin };
+```
+
+> [!NOTE]
+> Middleware kết hợp từ trái sang phải. Một route như `router.route("/").get(authenticate, authorizeAdmin, getAllUsers)` có nghĩa là: trước tiên chứng minh bạn đã đăng nhập, sau đó chứng minh bạn là admin, và chỉ khi đó mới chạy handler. Một user thường sẽ vấp phải bộ bảo vệ thứ hai và nhận `Not authorized as an admin`.
+
+---
+
+## 🎬 6. Movie & Review Schema với References
+
+Reviews được nhúng bên trong một movie, mỗi review tham chiếu đến `User` đã viết nó. Movie tham chiếu đến `Genre` của nó.
+
+```js
+// backend/models/Movie.js
+import mongoose from "mongoose";
+const { ObjectId } = mongoose.Schema;
+
+// A review is embedded in a movie and points back to its author
+const reviewSchema = mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    rating: { type: Number, required: true },
+    comment: { type: String, required: true },
+    user: { type: ObjectId, ref: "User", required: true }, // reference
+  },
+  { timestamps: true }
+);
+
+const movieSchema = mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    image: { type: String },
+    year: { type: Number, required: true },
+    genre: { type: ObjectId, ref: "Genre", required: true }, // reference
+    detail: { type: String, required: true },
+    cast: [{ type: String }],
+    reviews: [reviewSchema],     // embedded reviews
+    numReviews: { type: Number, required: true, default: 0 },
+  },
+  { timestamps: true }
+);
+
+const Movie = mongoose.model("Movie", movieSchema);
+export default Movie;
+```
+
+```js
+// backend/models/Genre.js
+import mongoose from "mongoose";
+
+const genreSchema = mongoose.Schema({
+  name: {
+    type: String,
+    trim: true,
+    required: true,
+    maxLength: 32,
+    unique: true,
+  },
+});
+
+export default mongoose.model("Genre", genreSchema);
+```
+
+> [!TIP]
+> `ObjectId` + `ref` là một liên kết quan hệ, không phải một join. Để kéo dữ liệu user/genre được tham chiếu vào trong một query, hãy nối chuỗi `.populate("user")` hoặc `.populate("genre")` để response chứa toàn bộ sub-document thay vì chỉ id.
+
+---
+
+## 🧩 7. CRUD Controllers & Routes
+
+### Đăng ký & đăng nhập User (kèm validation)
+
+```js
+// backend/controllers/userController.js
+import User from "../models/User.js";
+import bcrypt from "bcryptjs";
+import asyncHandler from "../middlewares/asyncHandler.js";
+import createToken from "../utils/createToken.js";
+
+const createUser = asyncHandler(async (req, res) => {
+  const { username, email, password } = req.body;
+
+  // 1. Validate required fields
+  if (!username || !email || !password) {
+    throw new Error("Please fill all the input fields.");
+  }
+
+  // 2. Reject duplicate emails
+  const userExists = await User.findOne({ email });
+  if (userExists) return res.status(400).send("User already exists.");
+
+  // 3. Hash the password before saving
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  const newUser = new User({ username, email, password: hashedPassword });
+
+  try {
+    await newUser.save();
+    createToken(res, newUser._id); // sign JWT + set cookie
+    res.status(201).json({
+      _id: newUser._id,
+      username: newUser.username,
+      email: newUser.email,
+      isAdmin: newUser.isAdmin,
+    });
+  } catch (error) {
+    res.status(400);
+    throw new Error("Invalid user data.");
+  }
+});
+
+const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    // Compare the plaintext attempt against the stored hash
+    const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+    if (isPasswordValid) {
+      createToken(res, existingUser._id);
+      return res.status(200).json({
+        _id: existingUser._id,
+        username: existingUser.username,
+        email: existingUser.email,
+        isAdmin: existingUser.isAdmin,
+      });
+    }
+    return res.status(401).json({ message: "Invalid password" });
+  }
+  res.status(401).json({ message: "User not found" });
+});
+
+const logoutCurrentUser = asyncHandler(async (req, res) => {
+  // Clear the cookie by overwriting it with an expired one
+  res.cookie("jwt", "", { httpOnly: true, expires: new Date(0) });
+  res.status(200).json({ message: "Logged out successfully" });
+});
+
+const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({});
+  res.json(users);
+});
+
+const updateCurrentUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (user) {
+    user.username = req.body.username || user.username;
+    user.email = req.body.email || user.email;
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(req.body.password, salt);
+    }
+    const updatedUser = await user.save();
+    res.json({
+      _id: updatedUser._id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      isAdmin: updatedUser.isAdmin,
+    });
+  } else {
+    res.status(404);
+    throw new Error("User not found.");
+  }
+});
+
+export {
+  createUser,
+  loginUser,
+  logoutCurrentUser,
+  getAllUsers,
+  updateCurrentUserProfile,
+};
+```
+
+```js
+// backend/routes/userRoutes.js
+import express from "express";
+import {
+  createUser,
+  loginUser,
+  logoutCurrentUser,
+  getAllUsers,
+  updateCurrentUserProfile,
+} from "../controllers/userController.js";
+import { authenticate, authorizeAdmin } from "../middlewares/authMiddleware.js";
+
+const router = express.Router();
+
+router
+  .route("/")
+  .post(createUser)                          // register (public)
+  .get(authenticate, authorizeAdmin, getAllUsers); // admin only
+
+router.post("/auth", loginUser);             // login
+router.post("/logout", logoutCurrentUser);   // logout
+
+router
+  .route("/profile")
+  .put(authenticate, updateCurrentUserProfile); // logged-in user only
+
+export default router;
+```
+
+### Genre CRUD
+
+```js
+// backend/controllers/genreController.js
+import Genre from "../models/Genre.js";
+import asyncHandler from "../middlewares/asyncHandler.js";
+
+const createGenre = asyncHandler(async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.json({ error: "Name is required" });
+
+    const existingGenre = await Genre.findOne({ name });
+    if (existingGenre) return res.json({ error: "Already exists" });
+
+    const genre = await new Genre({ name }).save();
+    res.json(genre);
+  } catch (error) {
+    return res.status(400).json(error);
+  }
+});
+
+const updateGenre = asyncHandler(async (req, res) => {
+  try {
+    const { name } = req.body;
+    const { id } = req.params;
+
+    const genre = await Genre.findOne({ _id: id });
+    if (!genre) return res.status(404).json({ error: "Genre not found" });
+
+    genre.name = name;
+    const updatedGenre = await genre.save();
+    res.json(updatedGenre);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+const removeGenre = asyncHandler(async (req, res) => {
+  try {
+    const removed = await Genre.findByIdAndDelete(req.params.id);
+    if (!removed) return res.status(404).json({ error: "Genre not found" });
+    res.json(removed);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+const listGenres = asyncHandler(async (req, res) => {
+  try {
+    const all = await Genre.find({});
+    res.json(all);
+  } catch (error) {
+    return res.status(400).json(error.message);
+  }
+});
+
+const readGenre = asyncHandler(async (req, res) => {
+  try {
+    const genre = await Genre.findOne({ _id: req.params.id });
+    res.json(genre);
+  } catch (error) {
+    return res.status(400).json(error.message);
+  }
+});
+
+export { createGenre, updateGenre, removeGenre, listGenres, readGenre };
+```
+
+```js
+// backend/routes/genreRoutes.js
+import express from "express";
+import {
+  createGenre, updateGenre, removeGenre, listGenres, readGenre,
+} from "../controllers/genreController.js";
+import { authenticate, authorizeAdmin } from "../middlewares/authMiddleware.js";
+
+const router = express.Router();
+
+router.route("/").post(authenticate, authorizeAdmin, createGenre);
+router.route("/:id").put(authenticate, authorizeAdmin, updateGenre);
+router.route("/:id").delete(authenticate, authorizeAdmin, removeGenre);
+router.route("/genres").get(listGenres);
+router.route("/:id").get(readGenre);
+
+export default router;
+```
+
+### Movie CRUD + tạo review
+
+```js
+// backend/controllers/movieController.js
+import Movie from "../models/Movie.js";
+import asyncHandler from "../middlewares/asyncHandler.js";
+
+const createMovie = asyncHandler(async (req, res) => {
+  try {
+    const newMovie = new Movie(req.body);
+    const savedMovie = await newMovie.save();
+    res.json(savedMovie);
+  } catch (error) {
+    res.status(500).json(error.message);
+  }
+});
+
+const getAllMovies = asyncHandler(async (req, res) => {
+  try {
+    // populate replaces the genre ObjectId with the full genre document
+    const movies = await Movie.find({}).populate("genre");
+    res.json(movies);
+  } catch (error) {
+    res.status(500).json(error.message);
+  }
+});
+
+const getSpecificMovie = asyncHandler(async (req, res) => {
+  try {
+    const movie = await Movie.findById(req.params.id);
+    if (!movie) return res.status(404).json({ message: "Movie not found" });
+    res.json(movie);
+  } catch (error) {
+    res.status(500).json(error.message);
+  }
+});
+
+const updateMovie = asyncHandler(async (req, res) => {
+  try {
+    const updated = await Movie.findByIdAndUpdate(req.params.id, req.body, {
+      new: true, // return the updated document, not the old one
+    });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json(error.message);
+  }
+});
+
+const deleteMovie = asyncHandler(async (req, res) => {
+  try {
+    const deleted = await Movie.findByIdAndDelete(req.params.id);
+    res.json(deleted);
+  } catch (error) {
+    res.status(500).json(error.message);
+  }
+});
+
+const createReview = asyncHandler(async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const movie = await Movie.findById(req.params.id);
+    if (!movie) return res.status(404).json({ message: "Movie not found" });
+
+    // Prevent a user from reviewing the same movie twice
+    const alreadyReviewed = movie.reviews.find(
+      (r) => r.user.toString() === req.user._id.toString()
+    );
+    if (alreadyReviewed) {
+      res.status(400);
+      throw new Error("Movie already reviewed");
+    }
+
+    const review = {
+      name: req.user.username,
+      rating: Number(rating),
+      comment,
+      user: req.user._id,
+    };
+    movie.reviews.push(review);
+    movie.numReviews = movie.reviews.length;
+    await movie.save();
+    res.status(201).json({ message: "Review added" });
+  } catch (error) {
+    res.status(400).json(error.message);
+  }
+});
+
+export {
+  createMovie, getAllMovies, getSpecificMovie,
+  updateMovie, deleteMovie, createReview,
+};
+```
+
+```js
+// backend/routes/movieRoutes.js
+import express from "express";
+import {
+  createMovie, getAllMovies, getSpecificMovie,
+  updateMovie, deleteMovie, createReview,
+} from "../controllers/movieController.js";
+import { authenticate, authorizeAdmin } from "../middlewares/authMiddleware.js";
+
+const router = express.Router();
+
+// Public reads
+router.get("/all-movies", getAllMovies);
+router.get("/specific-movie/:id", getSpecificMovie);
+
+// Logged-in users can review
+router.post("/:id/reviews", authenticate, createReview);
+
+// Admin-only writes
+router.post("/create-movie", authenticate, authorizeAdmin, createMovie);
+router.put("/update-movie/:id", authenticate, authorizeAdmin, updateMovie);
+router.delete("/delete-movie/:id", authenticate, authorizeAdmin, deleteMovie);
+
+export default router;
+```
+
+---
+
+## ⚡ 8. Frontend: Tích hợp RTK Query
+
+### Vite proxy & constants
+
+Vì cookie là `httpOnly` và same-site, frontend phải trông giống như cùng một origin. Cấu hình một Vite proxy để `/api` chuyển tiếp đến backend.
+
+```js
+// frontend/vite.config.js
+export default {
+  server: {
+    proxy: {
+      "/api": "http://localhost:3000",
+      "/uploads": "http://localhost:3000",
+    },
+  },
+};
+```
+
+```js
+// frontend/src/redux/constants.js
+export const BASE_URL = "";                 // empty — the proxy handles it
+export const USERS_URL = "/api/v1/users";
+export const GENRE_URL = "/api/v1/genre";
+export const MOVIES_URL = "/api/v1/movies";
+```
+
+### baseQuery của apiSlice
+
+```js
+// frontend/src/redux/api/apiSlice.js
+import { fetchBaseQuery, createApi } from "@reduxjs/toolkit/query/react";
+import { BASE_URL } from "../constants";
+
+const baseQuery = fetchBaseQuery({ baseUrl: BASE_URL });
+
+export const apiSlice = createApi({
+  baseQuery,
+  tagTypes: ["User", "Movie", "Genre"], // cache tags for invalidation
+  endpoints: () => ({}),                // endpoints injected from other files
+});
+```
+
+### Các endpoint được inject — queries và mutations
+
+Một **query** đọc dữ liệu và cung cấp một cache tag. Một **mutation** ghi dữ liệu và làm vô hiệu (invalidate) các tag để các query phụ thuộc tự động re-fetch.
+
+```js
+// frontend/src/redux/api/users.js
+import { apiSlice } from "./apiSlice";
+import { USERS_URL } from "../constants";
+
+export const userApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getUsers: builder.query<User[], void>({
-      query: () => 'users',
-      providesTags: ['Users'],
+    // Mutations: change server state
+    login: builder.mutation({
+      query: (data) => ({ url: `${USERS_URL}/auth`, method: "POST", body: data }),
     }),
-    getMovies: builder.query<Movie[], void>({
-      query: () => 'movies',
-      providesTags: ['Movies'],
+    register: builder.mutation({
+      query: (data) => ({ url: USERS_URL, method: "POST", body: data }),
     }),
-    addMovie: builder.mutation<Movie, Partial<Movie>>({
-      query: (newMovie) => ({
-        url: 'movies',
-        method: 'POST',
-        body: newMovie,
-      }),
-      invalidatesTags: ['Movies'], // Tự động buộc truy vấn getMovies thực hiện tải lại dữ liệu mới!
+    logout: builder.mutation({
+      query: () => ({ url: `${USERS_URL}/logout`, method: "POST" }),
+    }),
+    profile: builder.mutation({
+      query: (data) => ({ url: `${USERS_URL}/profile`, method: "PUT", body: data }),
     }),
   }),
 });
 
-export const { useGetUsersQuery, useGetMoviesQuery, useAddMovieMutation } = dashboardApi;
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useLogoutMutation,
+  useProfileMutation,
+} = userApiSlice;
+```
+
+```js
+// frontend/src/redux/api/genre.js
+import { apiSlice } from "./apiSlice";
+import { GENRE_URL } from "../constants";
+
+export const genreApiSlice = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    createGenre: builder.mutation({
+      query: (newGenre) => ({ url: GENRE_URL, method: "POST", body: newGenre }),
+      invalidatesTags: ["Genre"], // forces fetchGenres to re-run
+    }),
+    updateGenre: builder.mutation({
+      query: ({ id, updateGenre }) => ({
+        url: `${GENRE_URL}/${id}`, method: "PUT", body: updateGenre,
+      }),
+      invalidatesTags: ["Genre"],
+    }),
+    deleteGenre: builder.mutation({
+      query: (id) => ({ url: `${GENRE_URL}/${id}`, method: "DELETE" }),
+      invalidatesTags: ["Genre"],
+    }),
+    fetchGenres: builder.query({
+      query: () => `${GENRE_URL}/genres`,
+      providesTags: ["Genre"], // this query carries the "Genre" tag
+    }),
+  }),
+});
+
+export const {
+  useCreateGenreMutation,
+  useUpdateGenreMutation,
+  useDeleteGenreMutation,
+  useFetchGenresQuery,
+} = genreApiSlice;
+```
+
+### Kết nối store
+
+```js
+// frontend/src/redux/store.js
+import { configureStore } from "@reduxjs/toolkit";
+import { setupListeners } from "@reduxjs/toolkit/query/react";
+import { apiSlice } from "./api/apiSlice";
+import authReducer from "./features/auth/authSlice";
+
+const store = configureStore({
+  reducer: {
+    [apiSlice.reducerPath]: apiSlice.reducer, // RTK Query cache reducer
+    auth: authReducer,
+  },
+  // The RTK Query middleware enables caching, polling, and invalidation
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(apiSlice.middleware),
+  devTools: true,
+});
+
+setupListeners(store.dispatch);
+export default store;
+```
+
+### Auth slice (được lưu vào localStorage)
+
+```js
+// frontend/src/redux/features/auth/authSlice.js
+import { createSlice } from "@reduxjs/toolkit";
+
+const initialState = {
+  userInfo: localStorage.getItem("userInfo")
+    ? JSON.parse(localStorage.getItem("userInfo"))
+    : null,
+};
+
+const authSlice = createSlice({
+  name: "auth",
+  initialState,
+  reducers: {
+    setCredentials: (state, action) => {
+      state.userInfo = action.payload;
+      localStorage.setItem("userInfo", JSON.stringify(action.payload));
+    },
+    logout: (state) => {
+      state.userInfo = null;
+      localStorage.clear();
+    },
+  },
+});
+
+export const { setCredentials, logout } = authSlice.actions;
+export default authSlice.reducer;
 ```
 
 > [!TIP]
-> Cơ chế lưu trữ đệm của RTK Query tự động xóa dữ liệu khi các component bị hủy bỏ (unmount). Để tùy biến hành vi này, hãy cấu hình các tùy chọn như `keepUnusedDataFor` (tính bằng giây) hoặc sử dụng `refetchOnMountOrArgChange` để kiểm soát các cuộc gọi mạng.
-
----
-
-## 🎨 3. Các Component Giao diện Dashboard
-
-Bố cục dashboard của chúng ta sử dụng các thẻ card để hiển thị số lượng dữ liệu thời gian thực (Người dùng, Bình luận, Phim) được định dạng đẹp mắt bằng các dải màu CSS (CSS gradients).
-
-### 1. Thẻ hiển thị chỉ số KPI (`SecondaryCard.tsx`)
-Component tái sử dụng này nhận vào các dải màu, nội dung hiển thị, và tiêu đề dạng pill để hiển thị các chỉ số dữ liệu:
-
-```tsx
-// src/components/SecondaryCard.tsx
-import React from 'react';
-
-interface SecondaryCardProps {
-  pill: string;
-  content: string | number;
-  info: string;
-  gradient: string; // ví dụ: "from-green-500 to-lime-400"
-}
-
-export const SecondaryCard: React.FC<SecondaryCardProps> = ({ pill, content, info, gradient }) => {
-  return (
-    <div className={`p-6 rounded-2xl text-white bg-gradient-to-br ${gradient} shadow-lg transition-transform hover:scale-105`}>
-      <span className="text-xs font-bold uppercase bg-white/20 px-2 py-1 rounded-full">{pill}</span>
-      <h3 className="text-3xl font-extrabold mt-3">{content}</h3>
-      <p className="text-sm opacity-90 mt-1">{info}</p>
-    </div>
-  );
-};
-```
-
-### 2. Widget theo dõi thời gian thực với cơ chế Polling (`RealTimeCard.tsx`)
-Để giám sát lượng khách truy cập đang trực tuyến, chúng ta cấu hình RTK Query để **thăm dò (poll)** máy chủ mỗi 5 giây:
-
-```tsx
-// src/components/RealTimeCard.tsx
-import React from 'react';
-import { useGetUsersQuery } from '../store/apiSlice';
-
-export const RealTimeCard: React.FC = () => {
-  // thăm dò API users mỗi 5000ms
-  const { data: visitors, isLoading, error } = useGetUsersQuery(undefined, {
-    pollingInterval: 5000,
-  });
-
-  if (isLoading) return <div className="animate-pulse p-4">Loading active sessions...</div>;
-  if (error) return <div className="text-red-500">Failed to link socket.</div>;
-
-  return (
-    <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h4 className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Real-Time Activity</h4>
-          <p className="text-slate-500 text-xs mt-1">Updates live every 5s</p>
-        </div>
-        <span className="flex h-3 w-3 relative">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-        </span>
-      </div>
-      <div className="mt-4">
-        <h2 className="text-white text-4xl font-extrabold">{visitors?.length || 0}</h2>
-        <span className="text-green-400 text-xs font-semibold">Active Visitors Online</span>
-      </div>
-    </div>
-  );
-};
-```
-
----
-
-## 🔒 4. Tuyến đường Bảo vệ (Protected Route) & Vòng đời Xác thực
-
-Để ngăn chặn truy cập trái phép vào các bảng điều khiển quản trị, chúng ta bao bọc các phân đoạn tuyến đường trong một component Bảo vệ (Auth Guard) sử dụng các lát cắt trạng thái toàn cục (global state slices).
-
-```tsx
-// src/components/ProtectedRoute.tsx
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { selectCurrentUserToken } from '../store/authSlice';
-
-export const ProtectedRoute: React.FC = () => {
-  const token = useSelector(selectCurrentUserToken);
-
-  if (!token) {
-    // Chuyển hướng về trang đăng nhập nếu người dùng chưa xác thực
-    return <Navigate to="/login" replace />;
-  }
-
-  // Render các component con (các tuyến đường lồng nhau)
-  return <Outlet />;
-};
-```
+> Các hook của RTK Query phơi bày những cờ loading: `isLoading` chỉ là `true` ở lần fetch đầu tiên (chưa có dữ liệu cache), trong khi `isFetching` là `true` trong các lần refetch nền. Dùng `isLoading` cho một spinner toàn màn hình và `isFetching` cho một chỉ báo "đang cập nhật" tinh tế.
 
 > [!WARNING]
-> Lưu trữ token xác thực trong `localStorage` khiến ứng dụng của bạn dễ bị tấn công XSS (Cross-Site Scripting). Đối với các ứng dụng doanh nghiệp bảo mật thực tế, hãy xử lý phiên đăng nhập bằng cookie bảo mật `httpOnly` được quản lý trực tiếp bởi máy chủ backend database API.
+> Chúng ta chỉ lưu thông tin user **không nhạy cảm** (id, username, email, isAdmin) trong `localStorage` để tiện cho UI. Thông tin xác thực phiên thực sự là cookie JWT `httpOnly`, mà JavaScript không thể đọc được—vì vậy ngay cả khi `localStorage` bị một script độc đọc, không có token nào bị phơi bày.
+
+---
+
+## 🔒 9. Protected Routes & Admin Guard
+
+Một `PrivateRoute` chặn các user chưa đăng nhập; một `AdminRoute` thêm vào đó yêu cầu `isAdmin`.
+
+```jsx
+// frontend/src/pages/Auth/PrivateRoute.jsx
+import { Navigate, Outlet } from "react-router-dom";
+import { useSelector } from "react-redux";
+
+const PrivateRoute = () => {
+  const { userInfo } = useSelector((state) => state.auth);
+  // Render nested routes if logged in, otherwise redirect to login
+  return userInfo ? <Outlet /> : <Navigate to="/login" replace />;
+};
+
+export default PrivateRoute;
+```
+
+```jsx
+// frontend/src/pages/Admin/AdminRoute.jsx
+import { Navigate, Outlet } from "react-router-dom";
+import { useSelector } from "react-redux";
+
+const AdminRoute = () => {
+  const { userInfo } = useSelector((state) => state.auth);
+  // Must be logged in AND an admin to reach admin pages
+  return userInfo && userInfo.isAdmin ? (
+    <Outlet />
+  ) : (
+    <Navigate to="/login" replace />
+  );
+};
+
+export default AdminRoute;
+```
+
+```jsx
+// frontend/src/main.jsx (route configuration)
+import { createBrowserRouter, RouterProvider, Route,
+         createRoutesFromElements } from "react-router-dom";
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route path="/" element={<App />}>
+      <Route index element={<Home />} />
+      <Route path="login" element={<Login />} />
+      <Route path="register" element={<Register />} />
+
+      {/* Logged-in users only */}
+      <Route element={<PrivateRoute />}>
+        <Route path="profile" element={<Profile />} />
+      </Route>
+
+      {/* Admins only */}
+      <Route element={<AdminRoute />}>
+        <Route path="admin/movies/genre" element={<GenreList />} />
+        <Route path="admin/movies/dashboard" element={<Dashboard />} />
+      </Route>
+    </Route>
+  )
+);
+```
+
+> [!NOTE]
+> `<Navigate replace />` ghi đè mục lịch sử hiện tại thay vì đẩy thêm một mục mới. Sau khi chuyển hướng một user chưa đăng nhập đến `/login`, nút Back của trình duyệt sẽ không đưa họ trở lại trang được bảo vệ mà họ vừa bị đẩy ra.
 
 ---
 
 ## 🧠 Kiểm tra Kiến thức
 
-Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của bạn. Nhấp vào **Reveal Answer** để xác minh câu trả lời.
+Trả lời những câu hỏi này để kiểm tra mức độ hiểu của bạn. Nhấp **Reveal Answer** để xác minh.
 
-### 1. Cơ chế tag invalidation của RTK Query giúp cải thiện đồng bộ hóa trạng thái như thế nào?
+### 1. Tại sao việc băm mật khẩu và ký JWT phải diễn ra ở backend, không bao giờ ở frontend?
+
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Khi một hành động ghi dữ liệu (mutation - ví dụ: `addMovie`) được thực thi, nó khai báo rằng nó sẽ vô hiệu hóa (invalidate) các tag cụ thể (ví dụ: `['Movies']`). RTK Query sẽ đối chiếu sự vô hiệu hóa này với các câu lệnh truy vấn đang hoạt động có cung cấp tag đó (ví dụ: `getMovies`). Nó sẽ tự động kích hoạt một cuộc gọi lấy dữ liệu mới trong nền để cập nhật bộ nhớ cache, đồng bộ hóa các component UI và các giá trị trạng thái mà không cần lập trình viên viết code dispatch thủ công.
+  Frontend chạy trên máy của người dùng và có thể bị kiểm tra hoặc can thiệp—bất kỳ secret nào được gửi đến trình duyệt đều thực chất là công khai. Việc băm mật khẩu phải dùng `bcrypt` ở phía server để plaintext không bao giờ rời khỏi request body mà chưa được băm trong DB, và JWT phải được ký bằng `process.env.JWT_SECRET`, thứ mà chỉ server biết. Nếu secret nằm trong code frontend, bất kỳ ai cũng có thể giả mạo các token hợp lệ và mạo danh bất kỳ user nào, bao gồm cả admin.
 </details>
 
-### 2. Sự khác biệt giữa `pollingInterval` và WebSockets đối với cập nhật thời gian thực là gì?
+### 2. Việc lưu JWT trong một cookie `httpOnly` bảo vệ khỏi điều gì, và nó được gửi đi trong mỗi request như thế nào?
+
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  - **Polling (Thăm dò)** sử dụng các yêu cầu HTTP định kỳ theo thời gian (ví dụ: mỗi 5 giây) để yêu cầu dữ liệu mới. Cơ chế này dễ cấu hình và chạy tốt trên hạ tầng HTTP tiêu chuẩn, nhưng tiêu tốn nhiều băng thông hơn.
-  - **WebSockets** thiết lập một kết nối hai chiều duy nhất, liên tục và bền bỉ, nơi máy chủ có thể chủ động đẩy dữ liệu cập nhật ngay lập tức. Đây là lựa chọn lý tưởng cho các cập nhật tần suất cao (chat, biểu đồ chứng khoán), nhưng yêu cầu xử lý phía backend phức tạp hơn.
+  Một cookie `httpOnly` không thể được đọc bởi JavaScript phía client, điều này giảm thiểu việc đánh cắp token qua **XSS** (một script độc không thể `document.cookie` để lấy token của bạn ra). Kết hợp với `sameSite: "strict"` nó cũng giảm rủi ro CSRF. Trình duyệt tự động đính kèm cookie vào mọi request cùng origin, nên frontend không bao giờ thêm header `Authorization` thủ công—`req.cookies.jwt` được middleware `authenticate` đọc trên server.
 </details>
 
-### 3. Tại sao `<Navigate to="/login" replace />` được ưa chuộng hơn việc thay đổi URL thông thường của cửa sổ trình duyệt?
+### 3. Trong RTK Query, `providesTags` và `invalidatesTags` phối hợp với nhau như thế nào để giữ UI đồng bộ?
+
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Thuộc tính `replace` sẽ ghi đè lên mục nhập hiện tại trong lịch sử duyệt web (history stack) thay vì thêm một mục nhập mới. Điều này đảm bảo rằng khi người dùng đăng xuất và nhấn nút "Quay lại" (Back) trên trình duyệt, họ sẽ không bị chuyển hướng ngược trở lại trang quản trị vốn yêu cầu bảo mật mà họ vừa đăng xuất.
+  Một **query** khai báo các cache tag mà nó sở hữu qua `providesTags` (ví dụ `fetchGenres` cung cấp `["Genre"]`). Một **mutation** khai báo những tag mà nó làm bẩn qua `invalidatesTags` (ví dụ `createGenre` làm vô hiệu `["Genre"]`). Khi mutation thành công, RTK Query tìm mọi query đang hoạt động cung cấp tag bị vô hiệu và tự động refetch nó—vì vậy danh sách genre cập nhật ngay lập tức sau một thao tác create/update/delete mà không cần lời gọi `dispatch` hay refetch thủ công.
 </details>
 
-### 4. Các trạng thái tải (loading states) được trả về từ hook của RTK Query bao gồm những gì?
+### 4. Tại sao `router.route("/").get(authenticate, authorizeAdmin, getAllUsers)` dùng hai middleware theo đúng thứ tự đó?
+
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Các hook của RTK Query trả về các cờ boolean biểu thị trạng thái yêu cầu API:
-  - `isLoading`: Trả về true trong yêu cầu đầu tiên (khi chưa có dữ liệu đệm nào).
-  - `isFetching`: Trả về true ở các yêu cầu tiếp theo (dữ liệu đang được tải lại trong nền).
-  - `isSuccess`: Trả về true nếu yêu cầu thành công.
-  - `isError`: Trả về true nếu yêu cầu thất bại.
+  Middleware chạy theo trình tự. `authenticate` chạy trước: nó xác minh cookie JWT và đính kèm `req.user`. Chỉ khi điều đó thành công thì `authorizeAdmin` mới chạy, và nó dựa vào `req.user.isAdmin` đã được thiết lập bởi bước trước. Nếu bạn đảo ngược chúng, `authorizeAdmin` sẽ đọc `req.user` trước khi nó tồn tại (undefined) và từ chối tất cả mọi người. Thứ tự này mã hóa quy tắc "bạn phải đăng nhập *trước khi* chúng ta có thể kiểm tra liệu bạn có phải admin hay không."
 </details>
 
-### 5. Tại sao không nên sử dụng React Context cho việc đồng bộ dữ liệu thời gian thực tần suất cao trong dashboard?
+### 5. Controller `createReview` kiểm tra `alreadyReviewed` trước khi push một review. Tại sao validation phía server này lại cần thiết ngay cả khi UI đã ẩn form review sau khi gửi?
+
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  React Context sẽ kích hoạt render lại (re-render) trên **tất cả** các component tiêu thụ (consumers) bất cứ khi nào giá trị đối tượng context thay đổi. Trong một dashboard cập nhật liên tục với tốc độ cao, điều này dẫn tới suy giảm hiệu năng nghiêm trọng. Các thư viện quản lý trạng thái như Redux hay Zustand sử dụng mô hình đăng ký chọn lọc (selective subscription), trong đó component chỉ render lại nếu các thuộc tính cụ thể mà chúng phụ thuộc thực sự thay đổi.
+  Các kiểm tra ở UI là để tiện lợi, không phải để bảo mật. Một user có thể phát lại request API trực tiếp (ví dụ qua Postman hoặc một script) và vượt qua bất kỳ bộ bảo vệ nào ở frontend. Backend là nguồn chân lý duy nhất, nên nó phải tự thực thi các quy tắc nghiệp vụ một cách độc lập—ở đây là quét `movie.reviews` để tìm một `user._id` trùng khớp và từ chối các bản trùng lặp với một mã `400`. Không bao giờ tin tưởng client trong việc thực thi các ràng buộc toàn vẹn.
 </details>
 
 ---
 
 ## 💻 Bài tập Thực hành
 
-### 🛠️ Bài tập 1: Xây dựng Form Thêm Phim Mới
-1. Tạo một React component `AddMovieForm.tsx`.
-2. Thiết lập các input điều khiển (title, year, image) sử dụng quản lý state.
-3. Tích hợp hook `useAddMovieMutation`.
-4. Xác minh rằng khi bạn gửi form, danh sách phim của component cha tự động tải lại và hiển thị bộ phim mới ngay lập tức.
+### 🛠️ Bài tập 1: Thêm các Movie endpoint vào RTK Query và xây dựng form Add-Movie
 
-### 🛠️ Bài tập 2: Tự động Bật/Tắt Cơ chế Polling
-1. Cập nhật `RealTimeCard.tsx` để thêm một nút bấm bật/tắt tính năng thăm dò (polling).
-2. Gợi ý: Truyền một giá trị trạng thái `pollingInterval` động (ví dụ: `5000` khi bật, `0` khi tắt) vào hook truy vấn.
-3. Xác minh rằng việc tắt tính năng này sẽ dừng các yêu cầu mạng trong tab Network của Console Developer trên trình duyệt.
+1. Tạo `frontend/src/redux/api/movies.js` và inject các endpoint dựa trên `MOVIES_URL`:
+   - `getAllMovies` là một **query** (`/all-movies`) với `providesTags: ["Movie"]`.
+   - `createMovie` là một **mutation** (`/create-movie`, `POST`) với `invalidatesTags: ["Movie"]`.
+   - Các mutation `updateMovie` và `deleteMovie` cũng làm vô hiệu `["Movie"]`.
+   Export các hook được sinh ra (`useGetAllMoviesQuery`, `useCreateMovieMutation`, v.v.).
+2. Xây dựng `CreateMovie.jsx`: các input có kiểm soát cho `name`, `year`, `image`, `detail`, `cast`, và một `<select>` được điền từ `useFetchGenresQuery`.
+3. Khi submit, gọi `useCreateMovieMutation`, sau đó hiển thị một `toast.success`. Vì mutation create làm vô hiệu `["Movie"]`, hãy xác nhận danh sách movie tự động re-fetch mà không cần refetch thủ công.
+4. **Xác minh**: mở tab Network, submit form, và quan sát một `POST /api/v1/movies/create-movie` theo sau tự động bởi một `GET /api/v1/movies/all-movies`.
+
+### 🛠️ Bài tập 2: Kết nối trang quản lý Genre với một modal
+
+1. Trong `GenreList.jsx`, đọc tất cả genre với `useFetchGenresQuery` và render mỗi cái thành một button.
+2. Dùng `useCreateGenreMutation` cho một form "create", và khi nhấp vào một genre đã có, mở một modal (`setModalVisible(true)`) được khởi tạo với `setSelectedGenre(genre)` và `setUpdatingName(genre.name)`.
+3. Bên trong modal, tái sử dụng một component `GenreForm` để gọi `useUpdateGenreMutation({ id, updateGenre: { name } })` và `useDeleteGenreMutation(id)`.
+4. Bảo vệ trang đằng sau `AdminRoute`. **Xác minh**: đăng nhập với tư cách non-admin và xác nhận bạn bị chuyển hướng đến `/login`; đăng nhập với tư cách admin (đặt `isAdmin: true` trong MongoDB) và xác nhận create/update/delete đều phản ánh ngay lập tức trong danh sách nhờ tag invalidation.

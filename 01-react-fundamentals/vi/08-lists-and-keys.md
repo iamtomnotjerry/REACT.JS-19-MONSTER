@@ -1,14 +1,14 @@
-# Hiển thị Danh sách và Sử dụng Key trong React 📋
+# Render danh sách và sử dụng Key trong React 📋
 
-Trong phát triển web, chúng ta thường xuyên cần hiển thị danh sách các mục một cách động (chẳng hạn như kết quả tìm kiếm, hồ sơ người dùng hoặc danh mục sản phẩm). Trong React, chúng ta xử lý hiển thị danh sách bằng các phương thức mảng JavaScript tiêu chuẩn, đặc biệt là phương thức **`.map()`**, ngay bên trong JSX.
+Trong phát triển web, chúng ta thường xuyên cần render các danh sách phần tử một cách động (chẳng hạn như kết quả tìm kiếm, hồ sơ người dùng, hoặc danh mục sản phẩm). Trong React, chúng ta xử lý việc render danh sách bằng các phương thức mảng tiêu chuẩn của JavaScript, cụ thể là phương thức **`.map()`**, bên trong JSX.
 
 ---
 
 ## ⚡ Phương thức `.map()` trong React
 
-Phương thức `.map()` lặp qua từng phần tử trong một mảng và trả về một mảng mới gồm các phần tử JSX. React sẽ tự động giải nén và render danh sách các phần tử này lên màn hình.
+Phương thức `.map()` lặp qua từng phần tử trong một mảng và trả về một mảng mới gồm các phần tử JSX. React sẽ tự động giải nén và render danh sách phần tử này.
 
-### Ví dụ cơ bản (Mảng chứa các Chuỗi)
+### Ví dụ cơ bản (Mảng các chuỗi)
 ```jsx
 const UserList = () => {
   const users = ["Alice", "Bob", "Charlie"];
@@ -25,40 +25,40 @@ const UserList = () => {
 
 ---
 
-## 🔑 Tại sao thuộc tính `key` lại bắt buộc?
+## 🔑 Tại sao prop `key` lại bắt buộc?
 
-Nếu bạn render một danh sách mà không cung cấp thuộc tính `key` cho phần tử ngoài cùng của mỗi mục, React sẽ hiển thị một cảnh báo trong bảng điều khiển console:
-> *Warning: Each child in a list should have a unique "key" prop.* (Cảnh báo: Mỗi phần tử con trong danh sách phải có một thuộc tính "key" duy nhất.)
+Nếu bạn render một danh sách mà không cung cấp prop `key` cho phần tử ngoài cùng của mỗi item, React sẽ hiển thị một cảnh báo trên console:
+> *Warning: Each child in a list should have a unique "key" prop.*
 
-### Cách React sử dụng Key
-1. **Reconciliation (Đối chiếu)**: Khi một mục trong danh sách được thêm, xóa hoặc sắp xếp lại, React sẽ so sánh các cây DOM ảo.
-2. **Identity (Định danh)**: Thuộc tính `key` đóng vai trò là một mã định danh duy nhất cho phần tử đó. Nó báo cho React biết: *"Phần tử UI này tương ứng với mục dữ liệu cụ thể này"*.
-3. **Hiệu năng**: Nhờ có keys, React chỉ cập nhật hoặc sắp xếp lại các phần tử DOM thực sự thay đổi, thay vì phải hủy bỏ và xây dựng lại toàn bộ danh sách từ đầu.
+### React sử dụng Key như thế nào
+1. **Reconciliation (Đối chiếu)**: Khi một item trong danh sách được thêm vào, xóa đi, hoặc sắp xếp lại, React so sánh các cây Virtual DOM.
+2. **Identity (Định danh)**: `key` đóng vai trò là một định danh duy nhất cho phần tử cụ thể đó. Nó nói cho React biết: *"Phần tử này tương ứng với item dữ liệu cụ thể này"*.
+3. **Performance (Hiệu năng)**: Với key, React chỉ cập nhật hoặc sắp xếp lại những phần tử DOM thực sự thay đổi, thay vì hủy bỏ và xây dựng lại toàn bộ danh sách từ đầu.
 
 > [!WARNING]
-> **Tránh sử dụng chỉ số mảng (index) làm key** nếu các mục trong danh sách có thể thay đổi, sắp xếp lại hoặc lọc. Làm như vậy có thể gây ra lỗi giao diện hiển thị sai lệch và ảnh hưởng tiêu cực đến hiệu năng. Hãy luôn ưu tiên các ID duy nhất từ dữ liệu của bạn (ví dụ: `user.id`).
+> **Tránh sử dụng chỉ số (index) của mảng làm key** nếu các item trong danh sách có thể thay đổi, được sắp xếp lại, hoặc được lọc. Làm như vậy có thể gây ra các lỗi hiển thị và vấn đề về hiệu năng. Luôn ưu tiên dùng các ID duy nhất từ dữ liệu của bạn (ví dụ `user.id`).
 
 ---
 
-## 🌟 Ví dụ nâng cao (Mảng chứa các Đối tượng)
+## 🌟 Ví dụ nâng cao (Mảng các object)
 
-Trong các ứng dụng thực tế, dữ liệu thường được biểu diễn dưới dạng một mảng chứa các đối tượng.
+Trong các ứng dụng thực tế, dữ liệu thường được biểu diễn dưới dạng một mảng các object.
 
 ```jsx
 const ProductList = () => {
   const products = [
-    { id: 101, name: "Bàn phím", price: 50 },
-    { id: 102, name: "Chuột", price: 30 },
-    { id: 103, name: "Màn hình", price: 200 }
+    { id: 101, name: "Keyboard", price: 50 },
+    { id: 102, name: "Mouse", price: 30 },
+    { id: 103, name: "Monitor", price: 200 }
   ];
 
   return (
     <div>
-      <h2>Danh mục sản phẩm</h2>
+      <h2>Product Catalog</h2>
       {products.map((product) => (
         <div key={product.id} className="product-card">
           <h3>{product.name}</h3>
-          <p>Giá: ${product.price}</p>
+          <p>Price: ${product.price}</p>
         </div>
       ))}
     </div>
@@ -70,7 +70,7 @@ const ProductList = () => {
 
 ## 🧠 Kiểm tra kiến thức
 
-Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của bạn về Danh sách & Key. Nhấp vào **Reveal Answer** để xác nhận câu trả lời.
+Hãy trả lời những câu hỏi sau để kiểm tra mức độ hiểu của bạn về Lists & Keys. Nhấp vào **Reveal Answer** để xác nhận.
 
 ### 1. Phương thức JavaScript nào được ưu tiên để render danh sách trong React?
 <details>
@@ -83,25 +83,25 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của b
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Nếu danh sách được sắp xếp lại, lọc, thêm hoặc xóa các mục, chỉ số index của mỗi phần tử sẽ thay đổi. Điều này có thể khiến React nhầm lẫn trạng thái UI của các phần tử (như ô input giữ giá trị của dòng sai lệch) và làm giảm hiệu năng render.
+  Nếu danh sách bị sắp xếp lại, được sort, được lọc, hoặc các item bị chèn thêm/xóa đi, thì index của mỗi item sẽ thay đổi. Điều này có thể khiến React đối chiếu sai các trạng thái UI (chẳng hạn như các ô input giữ lại giá trị của sai item trong danh sách) và làm giảm hiệu năng render.
 </details>
 
-### 3. Phần tử nào trong vòng lặp phải nhận thuộc tính `key`?
+### 3. Phần tử nào trong vòng lặp phải nhận prop `key`?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  **Phần tử ngoài cùng** được trả về bởi hàm callback của `.map()` phải nhận thuộc tính `key`.
+  **Phần tử ngoài cùng** được trả về bởi hàm callback của `.map()` phải nhận prop `key`.
 </details>
 
 ---
 
 ## 💻 Bài tập thực hành
 
-Áp dụng những gì đã học vào dự án `first-react-app` của bạn:
+Áp dụng những gì bạn đã học vào dự án `first-react-app` của bạn:
 
-### 🛠️ Bài tập 1: Component Danh sách Người dùng
-1. Tạo một tệp component mới tên là `UserList.jsx` bên trong `src/components/`.
-2. Định nghĩa một danh sách người dùng chứa thông tin chi tiết:
+### 🛠️ Bài tập 1: Component danh sách người dùng (User List)
+1. Tạo một file component mới `UserList.jsx` bên trong `src/components/`.
+2. Định nghĩa một danh sách người dùng chứa thông tin chi tiết của họ:
    ```javascript
    const users = [
      { id: 1, name: "Alice", age: 25 },
@@ -109,5 +109,5 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của b
      { id: 3, name: "Charlie", age: 22 }
    ];
    ```
-3. Sử dụng phương thức `.map()` để hiển thị danh sách người dùng này, hiển thị tên và tuổi của họ. Hãy đảm bảo mỗi phần tử có một `key` duy nhất.
-4. Import và render `<UserList />` bên trong `App.jsx`.
+3. Sử dụng phương thức `.map()` để render danh sách những người dùng này, hiển thị tên (name) và tuổi (age) của họ. Đảm bảo mỗi item có một `key` duy nhất.
+4. Import và render `<UserList />` trong `App.jsx`.

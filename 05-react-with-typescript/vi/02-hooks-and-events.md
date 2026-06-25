@@ -1,19 +1,44 @@
-# React Hooks & Xử lý sự kiện với TypeScript 🦾
+# React Hooks & Xử lý Sự kiện với TypeScript 🦾
 
-Định nghĩa kiểu dữ liệu cho các state hooks, liên kết DOM (refs) và sự kiện trình duyệt là điều bắt buộc để xây dựng các ứng dụng React an toàn và đầy đủ kiểu dữ liệu. TypeScript giúp tự động gợi ý các thuộc tính (autocomplete) của sự kiện và thẻ HTML tương ứng một cách chính xác.
+Định nghĩa kiểu cho các state hook, tham chiếu DOM, sự kiện trình duyệt, reducer, effect và context dùng chung là điều thiết yếu để xây dựng các ứng dụng React được định kiểu đầy đủ và an toàn. TypeScript đảm bảo mỗi giá trị, phần tử và hành động đều có gợi ý tự động (autocomplete) đúng đắn, đồng thời bảo vệ bạn khỏi việc truyền sai cấu trúc dữ liệu vào sai chỗ.
 
 ---
 
-## ⚡ 1. Định nghĩa kiểu cho `useState`
+## 🌐 Khái niệm & Tổng quan
 
-Thông thường, TypeScript có thể tự động suy đoán kiểu dữ liệu của biến state dựa trên giá trị khởi tạo ban đầu:
+Khi bạn kết nối các hook với nhau bằng JavaScript thuần, React vui vẻ chấp nhận bất cứ thứ gì bạn đưa cho nó và chỉ phàn nàn khi chạy (runtime) — thường là ngay trước mặt người dùng. Việc thêm TypeScript biến những bất ngờ runtime thầm lặng đó thành các lỗi rõ ràng, hữu ích ngay trong editor của bạn, *trước khi* bạn kịp save-and-refresh.
+
+Hãy hình dung TypeScript với các hook giống như **các ngăn được dán nhãn trong một hộp đồ nghề chuyên nghiệp**. Trong một ngăn kéo lộn xộn, bất kỳ dụng cụ nào cũng có thể nằm ở bất kỳ đâu — bạn chỉ phát hiện ra mình cầm nhầm tua vít thay vì cái đục khi miếng gỗ bị nứt. Một hộp đồ nghề có nhãn cho bạn biết *ngay lập tức* ngăn nào cần dụng cụ nào. Mỗi hook là một ngăn: `useState` được dán nhãn bằng cấu trúc của giá trị nó nắm giữ, `useReducer` được dán nhãn bằng tập hợp chính xác các action nó chấp nhận, `useContext` được dán nhãn bằng hợp đồng (contract) mà mọi consumer phải tuân thủ, và các event handler được dán nhãn bằng phần tử DOM chính xác mà chúng được kích hoạt trên đó.
+
+> [!NOTE]
+> TypeScript thường **suy luận (infer)** kiểu từ các giá trị khởi tạo của bạn, nên bạn viết *ít* code hơn, chứ không phải nhiều hơn. Bạn chỉ thêm generic tường minh khi suy luận không thể tự xác định kiểu — ví dụ khi giá trị khởi tạo là `null`, hoặc khi một reducer cần biết trước toàn bộ tập hợp action của nó.
+
+> [!TIP]
+> Quên mất tên một kiểu sự kiện React? Hãy viết handler **inline** ngay trong JSX (ví dụ `onClick={(e) => {}}`), rê chuột vào tham số `e` trong VS Code, và sao chép kiểu mà tooltip hiển thị. Mẹo này hoạt động với mọi sự kiện và nhanh hơn việc học thuộc cả danh mục.
+
+### Mỗi hook phù hợp ở đâu
+
+| Hook | TypeScript định kiểu giúp bạn điều gì | Khi nào bạn thêm kiểu tường minh |
+| --- | --- | --- |
+| `useState` | Giá trị state + setter của nó | Giá trị khởi tạo là `null`/`undefined`, hoặc là một union/cấu trúc object |
+| `useRef` | `.current` (DOM node hoặc hộp chứa giá trị có thể thay đổi) | Luôn truyền kiểu phần tử cho các DOM ref |
+| Event handlers | Không có gì tự động khi được tách ra | Khi bạn chuyển một handler ra khỏi JSX inline |
+| `useReducer` | State + `dispatch`, được thu hẹp theo từng action | Định nghĩa kiểu state **và** một kiểu action dạng discriminated-union |
+| `useEffect` | Không có gì (nó trả về `void`/cleanup) | Định kiểu cho **state** lưu trữ dữ liệu đã fetch |
+| Context | Giá trị mà mọi consumer nhận được | Truyền một generic cho `createContext` |
+
+---
+
+## ⚡ 1. Định kiểu cho `useState`
+
+TypeScript thường suy luận kiểu của các biến state dựa trên giá trị khởi tạo của chúng:
 
 ```tsx
-const [count, setCount] = useState(0); // Tự hiểu kiểu: number
-const [text, setText] = useState("");   // Tự hiểu kiểu: string
+const [count, setCount] = useState(0); // Inferred as: number
+const [text, setText] = useState("");   // Inferred as: string
 ```
 
-Tuy nhiên, nếu state của bạn khởi tạo bằng giá trị `null` hoặc `undefined`, hoặc hỗ trợ nhiều cấu trúc dữ liệu khác nhau, bạn bắt buộc phải sử dụng **Generics**:
+Tuy nhiên, nếu state của bạn được khởi tạo là `null` hoặc `undefined`, hoặc có thể hỗ trợ nhiều cấu trúc kiểu khác nhau, bạn phải định nghĩa nó bằng **Generics**:
 
 ```tsx
 interface User {
@@ -21,32 +46,53 @@ interface User {
   username: string;
 }
 
-// State có thể nhận đối tượng User HOẶC null
+// State can be either a User object OR null
 const [user, setUser] = useState<User | null>(null);
 
 const loginUser = () => {
-  setUser({ id: 99, username: "admin" }); // Hợp lệ!
+  setUser({ id: 99, username: "admin" }); // Safe!
+};
+```
+
+Đối với state dạng object mà bạn cập nhật theo từng trường, hãy định kiểu cấu trúc một lần và spread giá trị trước đó để giữ nguyên các trường còn lại:
+
+```tsx
+interface UserProfile {
+  name: string;
+  age: number;
+  email: string;
+}
+
+const [profile, setProfile] = useState<UserProfile>({
+  name: "",
+  age: 0,
+  email: "",
+});
+
+// Update a single field while preserving the rest
+const updateName = (name: string) => {
+  setProfile((prev) => ({ ...prev, name })); // prev is typed as UserProfile
 };
 ```
 
 ---
 
-## ⚡ 2. Định nghĩa kiểu cho `useRef`
+## ⚡ 2. Định kiểu cho `useRef`
 
-Hàm `useRef` hoạt động khác nhau tùy thuộc vào việc bạn dùng nó để trỏ tới các phần tử DOM hay để lưu các giá trị thông thường.
+`useRef` hành xử khác nhau tùy thuộc vào việc nó được dùng cho các phần tử DOM hay cho các giá trị có thể thay đổi.
 
-### A. Trỏ tới phần tử DOM (Chỉ đọc thuộc tính `.current`)
-Để liên kết với một phần tử DOM, bạn truyền tên interface của phần tử HTML tương ứng làm tham số generic, và bắt buộc khởi tạo ref bằng giá trị `null`:
+### A. Tham chiếu DOM (`.current` chỉ-đọc)
+Để nhắm tới một phần tử DOM, hãy truyền tên interface của phần tử HTML làm tham số generic, và khởi tạo ref bằng `null`:
 
 ```tsx
 import { useRef, useEffect } from 'react';
 
 export const TextInput = () => {
-  // 1. Khai báo kiểu phần tử input đích
+  // 1. Declare target input element type
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // 2. Truy cập DOM an toàn sử dụng dấu chấm hỏi optional chaining
+    // 2. Access DOM safely (use optional chaining)
     inputRef.current?.focus();
   }, []);
 
@@ -54,21 +100,24 @@ export const TextInput = () => {
 };
 ```
 
-*Một số kiểu phần tử HTML phổ biến: `HTMLInputElement`, `HTMLButtonElement`, `HTMLDivElement`, `HTMLFormElement`.*
+*Các kiểu phần tử HTML phổ biến bao gồm: `HTMLInputElement`, `HTMLButtonElement`, `HTMLDivElement`, `HTMLFormElement`.*
 
-### B. Lưu trữ giá trị thay đổi (Có thể ghi dữ liệu `.current`)
-Nếu bạn muốn lưu trữ một giá trị tồn tại qua các lần render mà không gây re-render component, chỉ cần truyền kiểu dữ liệu và KHÔNG truyền null vào khởi tạo:
+> [!WARNING]
+> Nếu `.current` của một DOM ref có thể là `null` tại thời điểm bạn đọc nó, TypeScript sẽ báo lỗi `inputRef.current.value`. Hãy ưu tiên optional chaining (`inputRef.current?.value`) để code của bạn luôn an toàn. Toán tử non-null assertion (`inputRef.current!.value`) làm im lặng việc kiểm tra nhưng loại bỏ lưới an toàn — chỉ dùng nó khi bạn chắc chắn phần tử đã được mount.
+
+### B. Giá trị có thể thay đổi (`.current` ghi-được)
+Nếu bạn đang lưu một giá trị tồn tại lâu dài mà không kích hoạt re-render, hãy cung cấp kiểu và KHÔNG truyền null:
 
 ```tsx
 const renderCount = useRef<number>(0);
-renderCount.current += 1; // Có thể ghi trực tiếp dữ liệu
+renderCount.current += 1; // Can write directly
 ```
 
 ---
 
-## ⚡ 3. Định nghĩa kiểu dữ liệu cho Sự kiện (Events)
+## ⚡ 3. Định kiểu cho Sự kiện
 
-Khi bạn viết các hàm xử lý sự kiện dạng inline trực tiếp trong JSX, React sẽ tự động hiểu kiểu dữ liệu. Tuy nhiên, nếu bạn viết tách các hàm xử lý sự kiện ra ngoài, bạn bắt buộc phải định nghĩa kiểu dữ liệu cho tham số sự kiện `e` một cách thủ công:
+Việc viết các event handler inline trong JSX không yêu cầu định kiểu thủ công vì React tự động suy luận chúng. Tuy nhiên, khi tách các event handler thành các hàm riêng biệt, bạn phải chú thích (annotate) tham số sự kiện một cách thủ công:
 
 ```tsx
 import React, { useState } from 'react';
@@ -76,93 +125,379 @@ import React, { useState } from 'react';
 export const UserForm = () => {
   const [email, setEmail] = useState("");
 
-  // 1. Định nghĩa kiểu sự kiện thay đổi input
+  // 1. Type input change events
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
   };
 
-  // 2. Định nghĩa kiểu sự kiện click chuột
+  // 2. Type click events
   const handleButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    console.log("Tọa độ click chuột:", e.clientX, e.clientY);
+    console.log("Button clicked coordinates:", e.clientX, e.clientY);
   };
 
-  // 3. Định nghĩa kiểu sự kiện submit biểu mẫu
+  // 3. Type form submit events
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Dữ liệu gửi đi:", email);
+    console.log("Submitting:", email);
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <input type="email" value={email} onChange={handleEmailChange} />
-      <button type="button" onClick={handleButtonClick}>In tọa độ chuột</button>
-      <button type="submit">Gửi biểu mẫu</button>
+      <button type="button" onClick={handleButtonClick}>Log Coordinates</button>
+      <button type="submit">Submit Form</button>
     </form>
   );
 };
 ```
 
----
-
-## 🧠 Kiểm tra kiến thức
-
-Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của bạn. Nhấp vào **Reveal Answer** để xác nhận câu trả lời.
-
-### 1. Khi nào bạn bắt buộc phải truyền tham số generic cho `useState`?
-<details>
-  <summary><b>Reveal Answer</b></summary>
-
-  Bạn cần truyền tham số kiểu generic (ví dụ: `useState<Type>()`) khi kiểu dữ liệu của state không thể tự suy luận chính xác từ giá trị khởi tạo. Các trường hợp bao gồm:
-  1. Giá trị khởi tạo ban đầu là `null` hoặc `undefined` (ví dụ chờ gọi API lấy dữ liệu).
-  2. State chứa kiểu kết hợp gồm nhiều giá trị cụ thể (ví dụ: `useState<"light" | "dark">("light")`).
-  3. State quản lý các đối tượng object phức tạp hoặc mảng chứa nhiều phần tử.
-</details>
-
-### 2. Tại sao ta phải khởi tạo DOM ref bằng giá trị `null` (ví dụ `useRef<HTMLInputElement>(null)`)?
-<details>
-  <summary><b>Reveal Answer</b></summary>
-
-  Trong React, truyền `null` giúp trình biên dịch nhận biết ref này dùng để liên kết với một phần tử DOM. Nó sẽ trả về một đối tượng `RefObject` chỉ đọc mà React tự quản lý thuộc tính `.current`. Nếu bạn không truyền `null`, nó sẽ trả về `MutableRefObject` có thể chỉnh sửa trực tiếp, dùng để lưu trữ các biến thông thường và không thể liên kết chính xác với các thuộc tính DOM.
-</details>
-
-### 3. Sự khác biệt giữa `React.ChangeEvent` và `React.FormEvent` là gì?
-<details>
-  <summary><b>Reveal Answer</b></summary>
-
-  - **`React.ChangeEvent`** kích hoạt khi giá trị của các ô nhập liệu (`<input>`, `<textarea>`, `<select>`) thay đổi, cho phép truy cập giá trị nhập vào qua `e.target.value`.
-  - **`React.FormEvent`** kích hoạt trên các sự kiện của biểu mẫu, chẳng hạn khi submit thẻ `<form>`, cho phép chạy hàm `e.preventDefault()` để chặn tải lại trang.
-</details>
-
-### 4. Làm thế nào để tìm được tên kiểu dữ liệu sự kiện React tương ứng nếu bạn lỡ quên?
-<details>
-  <summary><b>Reveal Answer</b></summary>
-
-  Bạn có thể viết hàm xử lý sự kiện dạng inline trực tiếp trong mã JSX (ví dụ: `<button onClick={(e) => {}} />`), sau đó di chuột qua tham số `e` trong VS Code. Trình soạn thảo sẽ hiển thị đầy đủ tên kiểu dữ liệu chính xác của sự kiện đó để bạn copy.
-</details>
-
-### 5. Tại sao chúng ta sử dụng `e.target.value` thay vì `e.currentTarget.value` trong React?
-<details>
-  <summary><b>Reveal Answer</b></summary>
-
-  - `e.target` trỏ trực tiếp đến phần tử **kích hoạt** sự kiện (có thể là một thẻ span nhỏ nằm bên trong thẻ button).
-  - `e.currentTarget` trỏ đến phần tử **gắn trình lắng nghe sự kiện** (chính là thẻ button đó).
-  Đối với các ô nhập liệu thông thường thì hai thuộc tính này giống nhau, nhưng dùng `e.currentTarget` sẽ an toàn hơn trong các cấu trúc giao diện lồng nhau phức tạp.
-</details>
+> [!TIP]
+> Generic trên sự kiện (`<HTMLButtonElement>`, `<HTMLFormElement>`) chính là phần tử mà **listener được gắn vào** — nó quyết định `e.currentTarget` là gì. Hãy chọn nó từ phần tử mà bạn đã viết `onClick`/`onSubmit` lên đó.
 
 ---
 
-## 💻 Bài tập thực hành
+## ⚡ 4. Định kiểu cho `useReducer`
 
-Áp dụng những gì bạn đã học vào môi trường phát triển của mình:
+Khi logic state trở nên phức tạp — nhiều giá trị con thay đổi cùng nhau, hoặc các chuyển trạng thái phụ thuộc vào action được thực hiện — `useReducer` gọn gàng hơn việc xoay xở với nhiều lời gọi `useState`. Với TypeScript bạn định nghĩa ba thứ: **kiểu state**, một **kiểu action dạng discriminated-union**, và một **reducer được định kiểu** trả về kiểu state.
 
-### 🛠️ Bài tập 1: Theo dõi tọa độ chuột trên Canvas & Ô nhập liệu
-1. Tạo một component `CoordinatesForm.tsx` (sử dụng đuôi `.tsx`).
+Một *discriminated union* chính là bí quyết: mỗi action chia sẻ một trường literal `type`, nên bên trong một `switch` TypeScript tự động **thu hẹp (narrow)** action về đúng cấu trúc trong mỗi `case`. Nếu bạn đọc `action.payload` trong một case không có payload, bạn sẽ nhận được lỗi biên dịch.
+
+```tsx
+import { useReducer } from "react";
+
+// 1. The shape of the state the reducer owns
+type CounterState = {
+  count: number;
+};
+
+// 2. A discriminated union of every action the reducer accepts.
+//    Each member has a literal `type` and optionally a payload.
+type CounterAction =
+  | { type: "increment" }
+  | { type: "decrement" }
+  | { type: "incrementBy"; payload: number }
+  | { type: "reset" };
+
+// 3. The reducer signature is fully typed: (state, action) => state
+const counterReducer = (
+  state: CounterState,
+  action: CounterAction
+): CounterState => {
+  switch (action.type) {
+    case "increment":
+      return { count: state.count + 1 };
+    case "decrement":
+      return { count: state.count - 1 };
+    case "incrementBy":
+      // TypeScript KNOWS action.payload exists here (and is a number)
+      return { count: state.count + action.payload };
+    case "reset":
+      return { count: 0 };
+    default:
+      return state; // safety fallback
+  }
+};
+
+export const Counter = () => {
+  // state is CounterState; dispatch only accepts CounterAction members
+  const [state, dispatch] = useReducer(counterReducer, { count: 0 });
+
+  return (
+    <div>
+      <p>Count: {state.count}</p>
+      <button onClick={() => dispatch({ type: "increment" })}>+1</button>
+      <button onClick={() => dispatch({ type: "decrement" })}>-1</button>
+      {/* The payload is required AND must be a number — anything else errors */}
+      <button onClick={() => dispatch({ type: "incrementBy", payload: 5 })}>
+        +5
+      </button>
+      <button onClick={() => dispatch({ type: "reset" })}>Reset</button>
+    </div>
+  );
+};
+```
+
+> [!NOTE]
+> Vì `dispatch` được định kiểu theo `CounterAction`, một lỗi gõ như `dispatch({ type: "incremnt" })` hoặc thiếu payload sẽ bị bắt ngay lập tức. Reducer và các component luôn đồng bộ với nhau mãi mãi — thay đổi union ở một nơi và mọi điểm dispatch sẽ tự động cập nhật phần kiểm tra của nó.
+
+Đối với các ứng dụng lớn hơn, hãy tách các kiểu và reducer ra một file riêng (ví dụ `reducers/counterReducer.ts`) và export chúng, sau đó import các kiểu vào nơi bạn khởi tạo state:
+
+```typescript
+// reducers/counterReducer.ts
+export type CounterState = { count: number };
+
+export type CounterAction =
+  | { type: "increment" }
+  | { type: "decrement" };
+
+export const counterReducer = (
+  state: CounterState,
+  action: CounterAction
+): CounterState => {
+  switch (action.type) {
+    case "increment":
+      return { count: state.count + 1 };
+    case "decrement":
+      return { count: state.count - 1 };
+    default:
+      return state;
+  }
+};
+```
+
+---
+
+## ⚡ 5. Định kiểu cho `useEffect` (Fetch dữ liệu API)
+
+Bản thân `useEffect` không trả về gì (hoặc một hàm cleanup), nên không có generic nào để truyền cho nó. Công việc định kiểu diễn ra xung quanh nó: bạn định kiểu cho **state** giữ dữ liệu đã fetch, và bạn await một hàm trợ giúp `async` **được định nghĩa bên trong** effect (bản thân effect callback không được là `async`, vì nó sẽ trả về một Promise trong khi React mong đợi một hàm cleanup).
+
+```tsx
+import { useState, useEffect } from "react";
+
+// 1. Describe the exact shape of the API response you care about
+interface Product {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  thumbnail: string;
+}
+
+export const ProductCard = () => {
+  // 2. Type the state: data is a Product OR null until it arrives
+  const [data, setData] = useState<Product | null>(null);
+
+  useEffect(() => {
+    // 3. Define an async function INSIDE the effect, then call it.
+    //    The effect callback stays synchronous.
+    const fetchData = async () => {
+      try {
+        const response = await fetch("https://dummyjson.com/products/1");
+        const result: Product = await response.json(); // assert the shape
+        setData(result);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []); // 4. Empty dependency array → run once on mount
+
+  // 5. Guard the render: data may still be null
+  if (!data) return <p>Loading...</p>;
+
+  return (
+    <div>
+      <p>ID: {data.id}</p>
+      <p>{data.title}</p>
+      <p>${data.price}</p>
+      <img src={data.thumbnail} alt={data.title} />
+    </div>
+  );
+};
+```
+
+> [!WARNING]
+> **Không** viết `useEffect(async () => { ... }, [])`. Một hàm `async` luôn trả về một Promise, nhưng React mong đợi một effect trả về hoặc không gì cả hoặc một hàm cleanup. Hãy định nghĩa hàm trợ giúp async bên trong và gọi nó, như minh họa ở trên.
+
+**Mảng dependency** cũng liên quan đến kiểu: mọi giá trị từ props hoặc state mà effect đọc đều nên được liệt kê. Với TypeScript và quy tắc ESLint `react-hooks` kết hợp với nhau, một dependency bị quên sẽ bị báo lỗi nên effect của bạn không bao giờ đọc một giá trị cũ (stale).
+
+---
+
+## ⚡ 6. Định kiểu cho Context API
+
+Context chia sẻ giá trị xuyên suốt cây component mà không cần prop-drilling. Với TypeScript bạn truyền một generic cho `createContext`, định kiểu cho value của Provider, và — quan trọng nhất — viết một **consumer hook an toàn** ném ra một lỗi rõ ràng khi một component đọc context bên ngoài Provider của nó. Việc ném lỗi đó cũng *thu hẹp loại bỏ `undefined`*, nên các consumer nhận được một giá trị được định kiểu không-null mà không cần kiểm tra thêm.
+
+```tsx
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  FC,
+} from "react";
+
+// 1. The contract every consumer can rely on
+interface CounterContextProps {
+  count: number;
+  increment: () => void;
+  decrement: () => void;
+}
+
+// 2. createContext generic. Start as `undefined` so we can detect
+//    "used outside a Provider" instead of silently returning a fake default.
+const CounterContext = createContext<CounterContextProps | undefined>(
+  undefined
+);
+
+// 3. Typed Provider. children is typed with ReactNode.
+export const CounterProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const [count, setCount] = useState(0);
+
+  const increment = () => setCount((c) => c + 1);
+  const decrement = () => setCount((c) => c - 1);
+
+  // The value object must satisfy CounterContextProps
+  return (
+    <CounterContext.Provider value={{ count, increment, decrement }}>
+      {children}
+    </CounterContext.Provider>
+  );
+};
+
+// 4. Safe-consumer helper: throws outside the Provider, and the throw
+//    NARROWS the type so the return value is never undefined.
+export const useCounter = (): CounterContextProps => {
+  const context = useContext(CounterContext);
+  if (context === undefined) {
+    throw new Error("useCounter must be used within a CounterProvider");
+  }
+  return context; // typed as CounterContextProps (no undefined)
+};
+```
+
+Việc sử dụng nó vẫn gọn gàng — không cần kiểm tra null, autocomplete đầy đủ:
+
+```tsx
+import { useCounter } from "./CounterContext";
+
+export const CounterDisplay = () => {
+  // count/increment/decrement are fully typed and guaranteed present
+  const { count, increment, decrement } = useCounter();
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={increment}>Increment</button>
+      <button onClick={decrement}>Decrement</button>
+    </div>
+  );
+};
+```
+
+Bọc phần cây component cần đến giá trị đó:
+
+```tsx
+import { CounterProvider } from "./CounterContext";
+import { CounterDisplay } from "./CounterDisplay";
+
+export const App = () => (
+  <CounterProvider>
+    <CounterDisplay />
+  </CounterProvider>
+);
+```
+
+> [!NOTE]
+> Việc khởi tạo context là `undefined` là có chủ đích. Nó cho phép hook `useCounter` phát hiện việc dùng sai và thất bại với một thông báo dễ đọc trong quá trình phát triển, thay vì các component render với một giá trị mặc định giả vô nghĩa mà chỉ làm hỏng mọi thứ về sau.
+
+---
+
+## 🧭 useState vs useReducer vs Context — Khi nào dùng cái nào
+
+Ba công cụ này trả lời những câu hỏi khác nhau: *các chuyển trạng thái của tôi phức tạp đến mức nào?* và *state này cần đi xa đến đâu?*
+
+| Tiêu chí | `useState` | `useReducer` | Context API |
+| --- | --- | --- | --- |
+| Phù hợp nhất cho | Các giá trị đơn giản, độc lập | Các chuyển trạng thái phức tạp / nhiều giá trị liên quan | Chia sẻ state qua nhiều component |
+| Cấu trúc state | Kiểu nguyên thủy hoặc object nhỏ | Object với nhiều trường thay đổi cùng nhau | Bất kỳ giá trị nào bạn phải tránh prop-drilling |
+| Cách cập nhật | Gọi setter trực tiếp | `dispatch(action)` với một reducer được định kiểu | Provider phơi bày giá trị + các hàm cập nhật |
+| Trọng tâm TypeScript | Generic khi không suy luận được | Kiểu state + các action discriminated-union | Generic `createContext` + consumer hook an toàn |
+| Phạm vi | Cục bộ trong một component | Cục bộ trong một component | Toàn ứng dụng / toàn nhánh cây |
+| Hãy dùng khi | Một toggle, một text field, một counter | Một form wizard, undo/redo, một giỏ hàng | Theme, người dùng auth, một counter toàn cục |
+
+Một quy tắc kinh nghiệm tốt: hãy bắt đầu với `useState`. Nâng cấp lên `useReducer` khi logic cập nhật trở nên nhiều nhánh hoặc nhiều giá trị thay đổi đồng bộ với nhau. Chỉ tìm đến **Context** khi các component *không liên quan, ở xa nhau* cần cùng một state — và lưu ý rằng bạn có thể đặt `state` và `dispatch` của một `useReducer` *bên trong* một Context cho state phức tạp toàn ứng dụng.
+
+---
+
+## 🧠 Kiểm tra Kiến thức của Bạn
+
+Trả lời các câu hỏi này để kiểm tra mức độ hiểu của bạn về hook và sự kiện. Nhấn **Reveal Answer** để xác minh.
+
+### 1. Khi nào bạn cần truyền tham số kiểu generic cho `useState`?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  Bạn cần truyền tham số kiểu generic (ví dụ `useState<Type>()`) khi kiểu không thể được suy luận chính xác từ giá trị khởi tạo. Điều này xảy ra khi:
+  1. Giá trị khởi tạo là `null` hoặc `undefined` (ví dụ, fetch dữ liệu sau này).
+  2. State giữ một union của nhiều kiểu khả dĩ (ví dụ, `useState<"light" | "dark">("light")`).
+  3. State quản lý các object phức tạp hoặc mảng các phần tử.
+</details>
+
+### 2. Tại sao kiểu action dạng discriminated-union lại hữu ích đến vậy với `useReducer`?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  Một discriminated union cho mỗi action một trường literal `type` dùng chung (ví dụ `{ type: "increment" }` so với `{ type: "incrementBy"; payload: number }`). Bên trong `switch (action.type)` của reducer, TypeScript **thu hẹp** action về đúng member cho mỗi `case`, nên nó biết chính xác những trường bổ sung nào (như `payload`) tồn tại. Điều này có nghĩa là:
+  - Đọc một `payload` trong một case không có nó là một lỗi biên dịch.
+  - `dispatch` từ chối các kiểu action không xác định và các payload thiếu/sai.
+  - Reducer và mọi điểm dispatch tự động đồng bộ với nhau khi bạn chỉnh sửa union.
+</details>
+
+### 3. Tại sao hàm `async` phải nằm *bên trong* `useEffect` thay vì biến chính effect callback thành `async`?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  Một hàm `async` luôn trả về một Promise. React mong đợi effect callback trả về hoặc không gì cả hoặc một **hàm cleanup** — không bao giờ là một Promise. Nếu bạn viết `useEffect(async () => {...}, [])`, React sẽ nhận một Promise làm "cleanup", điều này không đúng (và TypeScript báo lỗi). Cách khắc phục là định nghĩa một hàm trợ giúp `async` (ví dụ `fetchData`) bên trong effect và gọi nó một cách đồng bộ, giữ cho chính effect callback không phải là async.
+</details>
+
+### 4. Tại sao chúng ta khởi tạo `createContext` với `undefined` và viết một consumer hook an toàn ném lỗi?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  Khởi tạo với `undefined` (ví dụ `createContext<CounterContextProps | undefined>(undefined)`) cho phép chúng ta phát hiện khi một component đọc context **bên ngoài Provider của nó**. Consumer hook (`useCounter`) kiểm tra `undefined` và `throw` một lỗi rõ ràng như `"useCounter must be used within a CounterProvider"`. Như một phần thưởng, việc `throw` **thu hẹp kiểu** — sau khi qua bước kiểm tra, TypeScript biết giá trị là `CounterContextProps`, không phải `undefined`, nên các consumer nhận được một giá trị được định kiểu đầy đủ mà không cần kiểm tra null thêm. Một giá trị mặc định giả thay vào đó sẽ để các lỗi render một cách thầm lặng.
+</details>
+
+### 5. Bạn có một text input đơn lẻ và một form wizard nhiều bước với các trường dùng chung, phụ thuộc lẫn nhau. Hook nào phù hợp với từng cái, và tại sao?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  - **Text input đơn lẻ → `useState`.** Nó là một giá trị đơn giản, độc lập; một setter trực tiếp là cách ít rườm rà nhất.
+  - **Wizard nhiều bước → `useReducer`.** Nhiều trường thay đổi cùng nhau và các chuyển trạng thái (bước tiếp theo, validate, reset) nhiều nhánh. Một reducer được định kiểu với một kiểu action discriminated-union tập trung hóa logic đó và giữ cho mọi chuyển trạng thái an toàn về kiểu.
+  
+  Nếu các giá trị wizard đó cũng cần được đọc bởi các component ở xa, không liên quan, bạn sẽ nâng `useReducer` lên một **Context** để nó có thể được chia sẻ mà không cần prop-drilling.
+</details>
+
+---
+
+## 💻 Bài tập Thực hành
+
+Áp dụng những gì bạn đã học trong môi trường dự án của bạn:
+
+### 🛠️ Bài tập 1: Bộ theo dõi Tọa độ Canvas & Form được Định kiểu
+1. Tạo một component `CoordinatesForm.tsx` (đảm bảo nó dùng phần mở rộng `.tsx`).
 2. Thiết lập state theo dõi tọa độ: `const [coords, setCoords] = useState<{ x: number; y: number } | null>(null)`.
-3. Hiển thị một thẻ `<div>` lớn làm vùng canvas. Theo dõi di chuyển chuột trên vùng này bằng hàm xử lý:
-   ```typescript
+3. Render một container `<div>` đóng vai trò là vùng theo dõi. Theo dõi chuyển động chuột trên container bằng cách dùng:
+   ```tsx
    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
      setCoords({ x: e.clientX, y: e.clientY });
    };
    ```
-4. Hiển thị tọa độ `x` và `y` lên màn hình. Thêm một ô nhập để người dùng ghi nhãn, sử dụng một hàm `onChange` có định nghĩa kiểu sự kiện ChangeEvent đầy đủ.
-5. Kiểm tra để đảm bảo VS Code hiển thị đầy đủ các gợi ý thuộc tính khi bạn gõ dấu chấm sau biến sự kiện `e`.
+4. Render tọa độ lên màn hình. Bao gồm một input field để nhập một nhãn (label), bắt giá trị nhập qua một hàm `onChange` được định kiểu (`React.ChangeEvent<HTMLInputElement>`).
+5. Thêm một `useRef<HTMLInputElement>(null)` và một nút "Focus label" có `onClick` gọi `inputRef.current?.focus()`.
+6. Xác minh rằng VS Code cung cấp autocomplete đầy đủ trên các biến sự kiện của bạn và rằng `coords` được thu hẹp đúng cách trước khi bạn đọc `coords.x`.
+
+### 🛠️ Bài tập 2: Giỏ hàng với Reducer được Định kiểu + Context
+Xây dựng một giỏ hàng nhỏ kết hợp `useReducer` và Context.
+
+1. Tạo `CartContext.tsx`. Định nghĩa:
+   - Một kiểu state: `type CartState = { items: { id: number; name: string }[] }`.
+   - Một kiểu action dạng discriminated-union:
+     ```tsx
+     type CartAction =
+       | { type: "add"; payload: { id: number; name: string } }
+       | { type: "remove"; payload: { id: number } }
+       | { type: "clear" };
+     ```
+   - Một reducer được định kiểu `cartReducer = (state: CartState, action: CartAction): CartState => { ... }` xử lý cả ba case cộng với một `default`.
+2. Tạo context với `createContext<{ state: CartState; dispatch: React.Dispatch<CartAction> } | undefined>(undefined)`.
+3. Xây dựng một `CartProvider` được định kiểu (`FC<{ children: ReactNode }>`) gọi `useReducer(cartReducer, { items: [] })` và cung cấp `{ state, dispatch }`.
+4. Viết một consumer hook an toàn `useCart()` ném `"useCart must be used within a CartProvider"` khi được dùng bên ngoài Provider, và trả về giá trị đã được thu hẹp (không-`undefined`).
+5. Trong một component `CartView`, sử dụng `useCart()` để liệt kê các item và nối dây các nút dispatch `add`, `remove`, và `clear`. Xác nhận rằng TypeScript chặn một dispatch với `payload` thiếu hoặc sai.
+
+### 🛠️ Bài tập 3: Fetch Dữ liệu được Định kiểu với `useEffect`
+1. Tạo `UserList.tsx`. Định nghĩa một interface `User { id: number; name: string; username: string; email: string; phone: string }`.
+2. Thêm ba state được định kiểu: `useState<User[]>([])`, `useState<boolean>(true)` cho loading, và `useState<string | null>(null)` cho một lỗi.
+3. Bên trong `useEffect(() => { ... }, [])`, định nghĩa một hàm trợ giúp `async` `fetchUsers` fetch `https://jsonplaceholder.typicode.com/users`, kiểm tra `response.ok`, gán `const data: User[] = await response.json()`, và lưu nó. Xử lý lỗi trong một `catch` (dùng `error instanceof Error ? error.message : "An error occurred"`) và đặt loading thành `false` trong `finally`.
+4. Render `Loading...` trong khi đang loading, thông báo lỗi nếu có, ngược lại một `<table>` các user được key bằng `user.id`.
+5. Xác nhận rằng không có kiểu `any` nào và rằng việc xóa một cột khỏi interface `User` tạo ra một lỗi biên dịch tại nơi bạn render nó.

@@ -14,13 +14,13 @@ Trong React, **State** là bộ nhớ riêng tư, cục bộ của một compone
 import { useState } from 'react';
 
 const Counter = () => {
-  // const [giaTriState, hamCapNhatState] = useState(giaTriKhoiDau);
+  // const [stateValue, setterFunction] = useState(initialValue);
   const [count, setCount] = useState(0);
 
   return (
     <div>
-      <p>Số lần click: {count}</p>
-      <button onClick={() => setCount(count + 1)}>Tăng lên</button>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
     </div>
   );
 };
@@ -42,23 +42,23 @@ Vì state là bất biến, **tuyệt đối không chỉnh sửa trực tiếp 
 const FriendsList = () => {
   const [friends, setFriends] = useState(["Alex", "Jordan"]);
 
-  // Thêm phần tử mới (Sử dụng Toán tử Spread)
+  // Adding an item (Spread Operator)
   const addFriend = () => {
     setFriends([...friends, "John"]);
   };
 
-  // Xóa phần tử (Sử dụng Filter)
+  // Removing an item (Filter)
   const removeFriend = (nameToRemove) => {
     setFriends(friends.filter((friend) => friend !== nameToRemove));
   };
 
   return (
     <div>
-      <button onClick={addFriend}>Thêm John</button>
+      <button onClick={addFriend}>Add John</button>
       <ul>
         {friends.map((friend, idx) => (
           <li key={idx}>
-            {friend} <button onClick={() => removeFriend(friend)}>Xóa</button>
+            {friend} <button onClick={() => removeFriend(friend)}>Remove</button>
           </li>
         ))}
       </ul>
@@ -78,7 +78,7 @@ const MovieCard = () => {
   });
 
   const updateRating = () => {
-    // Sao chép các thuộc tính cũ của movie, ghi đè rating mới
+    // Copy movie properties, overwrite rating
     setMovie({
       ...movie,
       rating: 9
@@ -88,8 +88,8 @@ const MovieCard = () => {
   return (
     <div>
       <h3>{movie.title}</h3>
-      <p>Đánh giá: {movie.rating}/10</p>
-      <button onClick={updateRating}>Cập nhật đánh giá</button>
+      <p>Rating: {movie.rating}/10</p>
+      <button onClick={updateRating}>Update Rating</button>
     </div>
   );
 };
@@ -111,8 +111,8 @@ const InputForm = () => {
 
   return (
     <div>
-      <input type="text" value={name} onChange={handleChange} placeholder="Nhập tên của bạn" />
-      <p>Tên của bạn là: {name}</p>
+      <input type="text" value={name} onChange={handleChange} placeholder="Enter name" />
+      <p>Your name is: {name}</p>
     </div>
   );
 };
@@ -129,7 +129,7 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của b
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  React tự động kích hoạt quá trình render lại (re-render) component đó và cập nhật chỉ những phần thay đổi vào cây Real DOM.
+  React tự động kích hoạt quá trình render lại (re-render) component đó và chỉ cập nhật những phần thay đổi vào cây Real DOM.
 </details>
 
 ### 2. Tại sao bạn không nên viết trực tiếp `myStateArray.push('item')`?

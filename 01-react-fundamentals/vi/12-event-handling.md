@@ -14,10 +14,10 @@ Cách tiếp cận này giúp mã nguồn sạch sẽ, đặc biệt là khi log
 ```jsx
 const ClickButton = () => {
   const handleClick = () => {
-    alert("Nút bấm đã được click! 🚀");
+    alert("Button was clicked! 🚀");
   };
 
-  return <button onClick={handleClick}>Click vào tôi</button>;
+  return <button onClick={handleClick}>Click Me</button>;
 };
 ```
 > [!IMPORTANT]
@@ -30,8 +30,8 @@ Hữu ích cho các hành động ngắn, đơn giản.
 ```jsx
 const ClickButton = () => {
   return (
-    <button onClick={() => alert("Đã xử lý sự kiện click trực tiếp! ⚡")}>
-      Click vào tôi
+    <button onClick={() => alert("Inline click handled! ⚡")}>
+      Click Me
     </button>
   );
 };
@@ -41,18 +41,18 @@ const ClickButton = () => {
 
 ## 🌟 2. Truyền tham số vào Hàm xử lý sự kiện
 
-Nếu bạn cần truyền các tham số tùy chỉnh vào hàm xử lý sự kiện của mình, hãy bọc cuộc gọi hàm đó bên trong một arrow function ẩn danh:
+Nếu bạn cần truyền các tham số tùy chỉnh vào hàm xử lý sự kiện của mình, hãy bọc trình xử lý đó bên trong một arrow function ẩn danh:
 
 ```jsx
 const UserActions = () => {
   const greetUser = (name) => {
-    alert(`Xin chào, ${name}!`);
+    alert(`Hello, ${name}!`);
   };
 
-  // Chúng ta bọc cuộc gọi hàm trong một arrow function để nó không bị chạy ngay lập tức
+  // We wrap the function call in an arrow function so it isn't executed immediately
   return (
     <button onClick={() => greetUser("Monster Coder")}>
-      Chào người dùng
+      Greet User
     </button>
   );
 };
@@ -67,7 +67,7 @@ React hỗ trợ tất cả các sự kiện tiêu chuẩn của trình duyệt,
 ```jsx
 const HoverBox = () => {
   const handleMouseMove = () => {
-    console.log("Chuột di chuyển trên hộp!");
+    console.log("Mouse moved over the box!");
   };
 
   return (
@@ -75,7 +75,7 @@ const HoverBox = () => {
       onMouseMove={handleMouseMove}
       style={{ padding: "50px", border: "1px solid black" }}
     >
-      Rê chuột vào tôi và kiểm tra bảng điều khiển console!
+      Hover over me and check console!
     </div>
   );
 };
@@ -92,7 +92,7 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của b
   <summary><b>Reveal Answer</b></summary>
 
   - `onClick={handleClick}` truyền tham chiếu hàm cho React, nên nó chỉ chạy **khi người dùng thực sự click vào nút**.
-  - `onClick={handleClick()}` thực thi hàm **ngay khi component render**, đây thường là một lỗi logic và có thể gây ra vòng lặp render vô tận (infinite re-render loop) nếu hàm này có cập nhật state.
+  - `onClick={handleClick()}` thực thi hàm **ngay khi component render**, đây thường là một lỗi logic và có thể gây ra vòng lặp re-render vô tận nếu hàm này có cập nhật state.
 </details>
 
 ### 2. Làm thế nào để truyền tham số vào hàm xử lý sự kiện trong React?

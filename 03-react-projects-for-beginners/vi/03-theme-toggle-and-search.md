@@ -1,21 +1,21 @@
 # Dự án 5 & 6: Chuyển đổi giao diện (Theme Toggle) & Thanh tìm kiếm ẩn 🚀
 
-Trong bài học này, chúng ta sẽ xây dựng ứng dụng **Chuyển đổi giao diện sáng/tối (Theme Toggle)** và **Thanh tìm kiếm ẩn (Hidden Search Bar)** (thanh tìm kiếm tự trượt ra khi bấm nút). Các dự án này tập trung vào **định dạng kiểu dáng có điều kiện (conditional styling)**, sự kiện mất focus của ô nhập (`onBlur`), và tạo hiệu ứng chuyển động mượt mà bằng state trong React.
+Trong bài học này, chúng ta sẽ xây dựng một **ứng dụng Chuyển đổi giao diện (Theme Toggle)** (bộ chuyển đổi chế độ Sáng/Tối) và một **Thanh tìm kiếm ẩn (Hidden Search Bar)** (ô nhập tìm kiếm tương tác tự trượt ra khi cần). Các dự án này dạy về **định dạng kiểu dáng có điều kiện (conditional styling)**, các trình kích hoạt sự kiện focus (`onBlur`), và tạo hiệu ứng động cho layout bằng state trong React.
 
 ---
 
-## 🎨 Dự án 5: Chuyển đổi giao diện sáng/tối (Theme Toggle)
+## 🎨 Dự án 5: Ứng dụng Chuyển đổi giao diện (Theme Toggle)
 
-Dự án này sử dụng trạng thái boolean để chuyển đổi qua lại giữa giao diện sáng và tối, tự động thay đổi các giá trị màu sắc của component.
+Dự án này sử dụng state dạng boolean để chuyển đổi qua lại giữa giao diện tối và sáng, tự động cập nhật các thuộc tính kiểu dáng trên component.
 
 ### Các khái niệm chính được thực hành:
-* Lưu trữ trạng thái bật/tắt dạng boolean (`isDark`) trong state.
-* Sử dụng toán tử điều kiện trong inline style: `color: isDark ? "#fff" : "#000"`.
-* Tạo hiệu ứng chuyển đổi màu sắc nền mượt mà bằng CSS.
+* Lưu trữ các giá trị bật/tắt (`isDark`) trong state.
+* Viết toán tử ba ngôi (ternary) trong inline style: `color: isDark ? "#fff" : "#000"`.
+* Tạo các hiệu ứng chuyển đổi trạng thái thị giác mượt mà bằng CSS.
 
 ### Hướng dẫn triển khai từng bước (`ToggleTheme.jsx`)
 
-Tạo tệp component tại `src/components/ToggleTheme.jsx` và viết đoạn mã sau:
+Tạo tệp `src/components/ToggleTheme.jsx` và chèn đoạn mã sau:
 
 ```jsx
 import { useState } from 'react';
@@ -25,7 +25,7 @@ export const ToggleTheme = () => {
 
   const toggle = () => setIsDark((prev) => !prev);
 
-  // Đối tượng style động thay đổi theo state
+  // Dynamic style object based on state
   const containerStyles = {
     backgroundColor: isDark ? "#121212" : "#f5f6fa",
     color: isDark ? "#f5f6fa" : "#121212",
@@ -36,7 +36,7 @@ export const ToggleTheme = () => {
     alignItems: "center",
     borderRadius: "10px",
     boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-    transition: "all 0.4s ease", // Hiệu ứng chuyển màu mượt mà
+    transition: "all 0.4s ease", // Smooth background color swap
     maxWidth: "400px",
     margin: "20px auto",
     fontFamily: "Arial, sans-serif"
@@ -57,10 +57,10 @@ export const ToggleTheme = () => {
 
   return (
     <div style={containerStyles}>
-      <h2>{isDark ? "Đã bật Chế độ tối 🌙" : "Đã bật Chế độ sáng ☀️"}</h2>
-      <p style={{ margin: "5px 0" }}>Thay đổi giao diện sử dụng state của component.</p>
+      <h2>{isDark ? "Dark Mode Active 🌙" : "Light Mode Active ☀️"}</h2>
+      <p style={{ margin: "5px 0" }}>Theme toggle uses local component state.</p>
       <button style={btnStyles} onClick={toggle}>
-        Chuyển sang {isDark ? "Chế độ sáng" : "Chế độ tối"}
+        Switch to {isDark ? "Light Mode" : "Dark Mode"}
       </button>
     </div>
   );
@@ -71,16 +71,16 @@ export const ToggleTheme = () => {
 
 ## 🔍 Dự án 6: Thanh tìm kiếm ẩn (Hidden Search Bar)
 
-Thanh tìm kiếm được ẩn đi cho đến khi người dùng nhấp vào biểu tượng kính lúp. Khi nhấp, ô nhập sẽ trượt ra mượt mà và tự động đặt con trỏ chuột (focus). Nếu người dùng nhấp ra ngoài, thanh tìm kiếm tự động thu lại.
+Một thanh tìm kiếm được ẩn đi cho đến khi người dùng nhấp vào biểu tượng kính lúp. Sau khi nhấp, nó sẽ mở rộng ra mượt mà và tự động focus vào ô nhập. Nếu người dùng nhấp ra ngoài, thanh tìm kiếm sẽ thu lại.
 
 ### Các khái niệm chính được thực hành:
-* **Sự kiện mất focus (`onBlur`)**: Tự động đóng thanh tìm kiếm khi người dùng nhấp chuột ra ngoài ô nhập.
-* **Tự động focus (`autoFocus`)**: Đặt con trỏ chuột vào ô nhập ngay khi nó vừa hiển thị, giúp người dùng gõ phím được ngay.
-* **Hiệu ứng trượt (Slide-Out Animation)**: Thay đổi chiều rộng (width) của input linh hoạt bằng inline styles.
+* **Sự kiện focus (`onBlur`)**: Đóng thanh tìm kiếm khi ô nhập mất focus (hành vi nhấp ra ngoài).
+* **AutoFocus**: Tự động đặt con trỏ vào ô nhập tìm kiếm ngay khi nó được render.
+* **Hiệu ứng trượt động (Animated Slide-Outs)**: Điều chỉnh chiều rộng (width) của input một cách linh hoạt bằng inline styling.
 
 ### Hướng dẫn triển khai từng bước (`HiddenSearch.jsx`)
 
-Tạo tệp component tại `src/components/HiddenSearch.jsx` và viết đoạn mã sau:
+Tạo tệp `src/components/HiddenSearch.jsx` và chèn đoạn mã sau:
 
 ```jsx
 import { useState } from 'react';
@@ -107,7 +107,7 @@ export const HiddenSearch = () => {
     borderRadius: "25px",
     fontSize: "1rem",
     outline: "none",
-    transition: "all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)", // Hiệu ứng trượt cao cấp
+    transition: "all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)", // Premium slide ease
   };
 
   const searchBtnStyles = {
@@ -126,14 +126,14 @@ export const HiddenSearch = () => {
     <div style={containerStyles}>
       <input
         type="text"
-        placeholder="Nhập từ khóa tìm kiếm..."
+        placeholder="Type search queries..."
         style={inputStyles}
-        onBlur={() => setShowInput(false)} // Thu hồi ô nhập khi click ra ngoài
-        autoFocus={showInput} // Tự động đặt con trỏ chuột khi mount
-        key={showInput ? "open" : "closed"} // Dùng key để ép buộc render lại autoFocus
+        onBlur={() => setShowInput(false)} // Retract input when clicking away
+        autoFocus={showInput} // Auto focus input when mounted
+        key={showInput ? "open" : "closed"} // Key trick to force fresh autoFocus render
       />
       <button style={searchBtnStyles} onClick={() => setShowInput((prev) => !prev)}>
-        {showInput ? "Đóng ✕" : "Tìm kiếm 🔍"}
+        {showInput ? "Close ✕" : "Search 🔍"}
       </button>
     </div>
   );
@@ -144,46 +144,46 @@ export const HiddenSearch = () => {
 
 ## 🧠 Kiểm tra kiến thức
 
-Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của bạn. Nhấp vào **Reveal Answer** để xác nhận câu trả lời.
+Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của bạn về những dự án trung cấp này. Nhấp vào **Reveal Answer** để xác nhận.
 
-### 1. Sự kiện `onBlur` có tác dụng gì, và tại sao nó hữu ích trong thiết kế giao diện tìm kiếm?
+### 1. Sự kiện `onBlur` có tác dụng gì, và nó hữu ích như thế nào trong các form tìm kiếm trên giao diện?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Sự kiện `onBlur` được kích hoạt khi một phần tử input mất focus (ví dụ khi người dùng click chuột ra bất kỳ chỗ nào khác ngoài ô nhập). Trong các giao diện tìm kiếm, nó giúp tự động ẩn hoặc thu hồi thanh tìm kiếm khi người dùng không còn thao tác với nó nữa.
+  Sự kiện `onBlur` được kích hoạt khi một phần tử input mất focus (tức là khi người dùng nhấp vào bất kỳ nơi nào khác bên ngoài ô nhập). Trong các giao diện tìm kiếm, nó hữu ích để tự động thu lại hoặc ẩn thanh tìm kiếm khi người dùng đã thao tác xong với nó.
 </details>
 
-### 2. Tại sao ô nhập trong dự án Hidden Search lại cần thuộc tính `autoFocus`?
+### 2. Tại sao ô nhập trong dự án Hidden Search lại cần `autoFocus`?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Nếu không có `autoFocus`, khi người dùng bấm nút tìm kiếm, ô nhập sẽ trượt mở ra nhưng người dùng bắt buộc phải click chuột vào ô nhập một lần nữa mới có thể gõ chữ. Thuộc tính `autoFocus` giúp tự động đặt con trỏ chuột vào ô nhập ngay lập tức, tiết kiệm cho người dùng một lần click.
+  Nếu không có `autoFocus`, khi người dùng nhấp vào nút tìm kiếm, ô nhập sẽ trượt mở ra nhưng người dùng phải nhấp vào bên trong ô nhập một lần nữa mới có thể bắt đầu gõ phím. `autoFocus` sẽ tự động đặt con trỏ văn bản vào ô nhập ngay lập tức, giúp người dùng tiết kiệm một lần nhấp.
 </details>
 
-### 3. Sự khác biệt giữa render có điều kiện (`condition && <Input />`) và style có điều kiện (`width: open ? "200px" : "0px"`) khi làm hiệu ứng chuyển động?
+### 3. Sự khác biệt giữa render có điều kiện (`condition && <Input />`) và style có điều kiện (`width: open ? "200px" : "0px"`) khi tạo hiệu ứng động cho các ô nhập là gì?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  - **Render có điều kiện**: Sẽ thêm hoặc xóa phần tử khỏi cây DOM hoàn toàn. Bạn rất khó để áp dụng các hiệu ứng chuyển động CSS transition khi thêm/bớt phần tử theo cách này.
-  - **Style có điều kiện**: Giữ nguyên phần tử trên cây DOM nhưng thay đổi các thuộc tính hiển thị như `width` hoặc `opacity`. Cách này giúp CSS transition (`transition: all 0.3s`) hoạt động và co giãn mượt mà.
+  - **Render có điều kiện (Conditional Rendering)** thêm vào hoặc xóa hẳn phần tử khỏi DOM. Bạn không thể dễ dàng áp dụng các CSS transition tiêu chuẩn khi thêm phần tử theo cách này.
+  - **Style có điều kiện (Conditional Styling)** giữ phần tử lại trong DOM nhưng điều chỉnh các thuộc tính thị giác như `width` hoặc `opacity`. Cách này cho phép các CSS transition (`transition: all 0.3s`) tạo hiệu ứng mở rộng mượt mà.
 </details>
 
-### 4. Hiệu ứng transition "cubic-bezier" trong CSS là gì và tại sao nó tối ưu hơn "linear"?
+### 4. CSS transition "cubic-bezier" là gì và tại sao nó được ưa chuộng hơn các giá trị "linear"?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  `cubic-bezier` định nghĩa đường cong tốc độ chuyển động tùy chỉnh. Các transition dạng linear (tuyến tính) di chuyển với tốc độ không đổi từ đầu đến cuối nên nhìn rất đơ và giả tạo. Chuyển động bezier có tốc độ thay đổi (nhanh lúc đầu và chậm lại lúc sau), bắt chước quán tính vật lý thực tế nên tạo cảm giác cao cấp và mượt mà hơn nhiều.
+  `cubic-bezier` định nghĩa một đường cong tốc độ tùy chỉnh (easing) cho các transition. Các transition dạng linear di chuyển với tốc độ không đổi, trông không tự nhiên. Các transition có easing bắt đầu nhanh rồi chậm lại (hoặc ngược lại), mô phỏng quán tính vật lý trong thế giới thực và mang lại cảm giác cao cấp, chuyên nghiệp hơn nhiều.
 </details>
 
-### 5. Cách tốt nhất để áp dụng nhiều class CSS động trong React là gì?
+### 5. Trong React, cách làm tốt nhất (best practice) để áp dụng nhiều class CSS một cách động là gì?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Bạn có thể dùng cú pháp chuỗi truyền tham số (string interpolation) với dấu backtick:
+  Bạn có thể dùng cú pháp nội suy chuỗi (string interpolation):
   ```jsx
   className={`search-input ${isOpen ? "active" : "hidden"}`}
   ```
-  Hoặc sử dụng các thư viện tiện ích như `clsx` hay `classnames` để gộp class dựa trên các cờ trạng thái.
+  Hoặc sử dụng các thư viện tiện ích như `clsx` hay `classnames` để gộp các class dựa trên các cờ trạng thái (state flags).
 </details>
 
 ---
@@ -192,13 +192,13 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của b
 
 Áp dụng những gì bạn đã học vào dự án React của mình:
 
-### 🛠️ Bài tập 1: Lưu trạng thái Giao diện đã chọn
-1. Mở file `ToggleTheme.jsx`.
-2. Lưu giá trị của state `isDark` vào `localStorage` bên trong một hook `useEffect` mỗi khi trạng thái này thay đổi.
-3. Đọc dữ liệu từ `localStorage` khi khởi tạo state ban đầu để ứng dụng ghi nhớ chế độ giao diện sáng/tối mỗi khi người dùng tải lại trang.
+### 🛠️ Bài tập 1: Lưu giữ lựa chọn giao diện
+1. Mở `ToggleTheme.jsx`.
+2. Lưu giá trị của `isDark` vào `localStorage` bên trong một hook `useEffect` mỗi khi nó thay đổi.
+3. Đọc giá trị giao diện từ `localStorage` trong lúc thiết lập state ban đầu để ứng dụng ghi nhớ giao diện khi tải lại trang.
 
-### 🛠️ Bài tập 2: Bộ lọc danh sách tìm kiếm trực tiếp
-1. Mở file `HiddenSearch.jsx`.
-2. Tạo một mảng danh sách sản phẩm ở phía dưới thanh tìm kiếm: `const list = ["Apple", "Banana", "Cherry", "Date", "Elderberry"]`.
-3. Theo dõi nội dung ô nhập bằng một state `query`.
-4. Hiển thị danh sách kết quả đã được lọc bên dưới ô nhập, chỉ giữ lại những phần tử chứa ký tự trong biến `query`.
+### 🛠️ Bài tập 2: Danh sách thư mục tìm kiếm trực tiếp
+1. Mở `HiddenSearch.jsx`.
+2. Thêm một danh sách các mục bên dưới thanh tìm kiếm: `const list = ["Apple", "Banana", "Cherry", "Date", "Elderberry"]`.
+3. Theo dõi nội dung văn bản của ô nhập bằng một biến state `query`.
+4. Render một phiên bản đã lọc của danh sách bên dưới ô nhập, chỉ chứa những tên khớp với `query`.

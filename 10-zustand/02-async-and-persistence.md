@@ -4,6 +4,44 @@ This lesson covers how to write asynchronous actions (like calling REST APIs) in
 
 ---
 
+## 🎯 Concept & Overview
+
+In real applications, state rarely stays local and temporary. You fetch data from servers, and you want certain values (theme, cart, auth token) to **survive a page refresh**. Zustand handles both needs with surprisingly little ceremony.
+
+Two ideas drive this lesson:
+
+1. **Async actions** — An action in Zustand is just a plain function. If it needs to `await` something, mark it `async`. There is no special "thunk" or "saga" layer to install.
+2. **Persistence** — The `persist` middleware transparently mirrors your store into `localStorage`/`sessionStorage`, then reloads it on startup.
+
+> [!NOTE]
+> Async actions in Zustand need **no extra middleware**. Because actions are ordinary JavaScript functions, you can write `async fetchUser()` and call `set()` whenever your `await` resolves. This is the biggest mental shift coming from Redux, where async logic forces you to add Thunk/Saga and dispatch multiple action types.
+
+> [!WARNING]
+> The `persist` middleware reads from `localStorage`, which **does not exist on the server**. In SSR frameworks (Next.js, Remix), the server renders with default values while the client rehydrates with stored values — producing a **hydration mismatch** warning. Guard against it by deferring persisted UI until after mount (e.g. a `hasHydrated` flag or `onRehydrateStorage` hook). See Section 3.
+
+> [!TIP]
+> Persist only what you truly need. Saving an entire store (including transient `loading`/`error` flags) to `localStorage` is wasteful and can resurrect stale states on reload. Use `partialize` to whitelist keys.
+
+### 🌍 Real-World Metaphor
+
+Think of your Zustand store as the **whiteboard in an office**:
+
+- **Without persistence**, the whiteboard is wiped clean every night (every page refresh). Everyone starts from a blank board the next morning.
+- **With the `persist` middleware**, a diligent assistant photographs the board before leaving (writes to `localStorage`) and redraws it exactly each morning (rehydration). The team continues as if nothing happened.
+- **An async action** is like sending a courier to fetch a document from the archive. You note "courier is out" on the board (`set({ loading: true })`), keep working, and update the board when the courier returns with the document — or with bad news (`set({ error })`).
+
+### 📊 Redux vs. Zustand for Async & Persistence
+
+| Concern               | Redux (classic)                          | Zustand                                   |
+| --------------------- | ---------------------------------------- | ----------------------------------------- |
+| Async logic           | Requires Thunk/Saga middleware           | Plain `async` function inside the store   |
+| Action dispatch       | `dispatch(action)` + reducer + types     | Call `set()` directly                     |
+| Boilerplate           | Action creators, types, reducers         | One function                              |
+| Persistence           | `redux-persist` (separate install/setup) | Built-in `persist` middleware             |
+| Storage serialization | Manual config / transforms               | Automatic `JSON.stringify` / `JSON.parse` |
+
+---
+
 ## ⚡ 1. Asynchronous Actions in Zustand
 
 Unlike Redux which requires complex middleware (like Thunk or Saga) to process async code, Zustand actions can be written directly as standard **`async/await`** functions:
@@ -23,7 +61,7 @@ export const useUserStore = create((set) => ({
       const res = await fetch(`https://jsonplaceholder.typicode.com/users/${id}`);
       if (!res.ok) throw new Error("User profile not found!");
       const data = await res.json();
-      
+
       // Update state when network request completes
       set({ user: data, loading: false });
     } catch (err) {
@@ -32,6 +70,9 @@ export const useUserStore = create((set) => ({
   }
 }));
 ```
+
+> [!NOTE]
+> Notice the three `set()` calls describe the full lifecycle of a request: **start** (`loading: true`), **success** (`user: data`), and **failure** (`error`). This `loading / data / error` triad is the standard shape for any data-fetching action.
 
 ---
 
@@ -51,7 +92,7 @@ export const useSettingsStore = create(
     (set) => ({
       fontSize: "medium",
       notificationsEnabled: true,
-      
+
       setFontSize: (size) => set({ fontSize: size }),
       toggleNotifications: () => set((state) => ({ notificationsEnabled: !state.notificationsEnabled }))
     }),
@@ -62,6 +103,76 @@ export const useSettingsStore = create(
     }
   )
 );
+```
+
+### 🎛️ Selective Persistence with `partialize`
+
+Often you only want to persist a subset of the store and leave transient fields out. The `partialize` option accepts a selector that returns just the keys you want saved:
+
+```javascript
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+
+export const useCartStore = create(
+  persist(
+    (set) => ({
+      cartItems: [],            // We DO want to persist this
+      loading: false,           // Transient — should NOT be persisted
+      error: null,              // Transient — should NOT be persisted
+
+      addItem: (item) =>
+        set((state) => ({ cartItems: [...state.cartItems, item] })),
+    }),
+    {
+      name: 'shopping-cart',
+      storage: createJSONStorage(() => localStorage),
+      // Only 'cartItems' is written to localStorage; loading/error stay in memory only
+      partialize: (state) => ({ cartItems: state.cartItems }),
+    }
+  )
+);
+```
+
+---
+
+## ⚡ 3. Safe Hydration (SSR & First Render)
+
+Because `localStorage` is unavailable on the server, persisted stores can desync between the server-rendered HTML and the client. The `onRehydrateStorage` hook lets you flip a flag once rehydration finishes, so you can hold off rendering persisted UI until it is safe:
+
+```jsx
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+
+export const useThemeStore = create(
+  persist(
+    (set) => ({
+      theme: 'light',
+      hasHydrated: false, // Tracks whether localStorage has been read
+
+      setTheme: (theme) => set({ theme }),
+      setHasHydrated: (value) => set({ hasHydrated: value }),
+    }),
+    {
+      name: 'app-theme',
+      storage: createJSONStorage(() => localStorage),
+      // Fires after the persisted value has been merged into the store
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
+    }
+  )
+);
+
+// Consuming component: avoid the SSR/client mismatch by waiting for hydration
+export const ThemeBadge = () => {
+  const theme = useThemeStore((s) => s.theme);
+  const hasHydrated = useThemeStore((s) => s.hasHydrated);
+
+  // Render a neutral placeholder until the persisted value is loaded
+  if (!hasHydrated) return <span>Loading theme…</span>;
+
+  return <span>Current theme: {theme}</span>;
+};
 ```
 
 ---
@@ -124,4 +235,15 @@ Apply what you learned in your project environment:
 4. Create an action `fetchProductAndAdd(id)` that:
    - Fetches product details asynchronously from `https://jsonplaceholder.typicode.com/todos/${id}` (treating the todo title as the product name, and generating a dummy price).
    - Appends it to `cartItems` with a quantity of `1`.
-5. Run the app, add items, and reload the browser to verify the basket items are successfully loaded from `localStorage`.
+5. Add `loading` and `error` state fields, and set them appropriately during the fetch lifecycle (start → success → failure).
+6. Use `partialize` so that **only** `cartItems` is written to `localStorage` (keep `loading`/`error` out of storage).
+7. Run the app, add items, and reload the browser to verify the basket items are successfully loaded from `localStorage` (and that `loading` does NOT reappear stuck as `true` after reload).
+
+### 🛠️ Exercise 2: Hydration-Safe Theme Toggle
+1. Create a store named `useThemeStore.js` wrapped in `persist` with a `theme` value (`'light'` | `'dark'`) and a `toggleTheme` action.
+2. Add a `hasHydrated` boolean and set it to `true` inside an `onRehydrateStorage` callback.
+3. Build a `ThemeToggle` component that:
+   - Reads `theme`, `toggleTheme`, and `hasHydrated` via selectors.
+   - Renders a neutral placeholder (e.g. a disabled button) while `hasHydrated` is `false`.
+   - Renders the real toggle once hydration completes.
+4. Refresh the page repeatedly and confirm you see **no** "hydration mismatch" warning in the console and the chosen theme persists across reloads.

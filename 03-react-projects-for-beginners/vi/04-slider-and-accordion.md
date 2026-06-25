@@ -1,22 +1,22 @@
-# Dự án 7 & 8: Slide trình chiếu (Slider) & Khung thu gọn (Accordion) 🚀
+# Dự án 7 & 8: Slider & Accordion 🚀
 
-Trong bài học này, chúng ta sẽ xây dựng ứng dụng **Slide đánh giá (Testimonials Slider)** và khung thu gọn thông tin **Accordion**. Các dự án này rèn luyện kỹ năng quản lý chỉ số index của mảng, cấu trúc component kết hợp (Parent-Child patterns), chuyển giao trạng thái (state lifting) và điều khiển ẩn/hiện bố cục.
+Trong bài học này, chúng ta sẽ xây dựng một **Testimonials Slider** (một carousel hiển thị các đánh giá của người dùng) và một **Accordion** có thể thu gọn. Các dự án này dạy về cách lập chỉ mục mảng (array indexing), kiến trúc component kết hợp (mô hình Parent-Child), nâng state (state lifting) và bố cục đóng/mở (toggling).
 
 ---
 
-## 🎠 Dự án 7: Slide trình chiếu nhận xét (Testimonials Slider)
+## 🎠 Dự án 7: Testimonials Slider
 
-Ứng dụng cho phép duyệt qua danh sách các thẻ nhận xét của khách hàng bằng các nút điều khiển "Tiếp theo" (Next) và "Quay lại" (Back).
+Một carousel điều hướng qua một mảng các thẻ đánh giá bằng các nút điều khiển "Next" và "Back".
 
 ### Các khái niệm chính được thực hành:
-* Quản lý trạng thái chỉ số `index` để chỉ hiển thị một phần tử tại một thời điểm.
-* Phép toán chia lấy dư `%` (modulo) để tạo vòng lặp mảng:
-  - **Tiếp theo**: `(index + 1) % length`
-  - **Quay lại**: `(index - 1 + length) % length`
+* Quản lý một state chỉ mục (`index`) để render từng phần tử một tại mỗi thời điểm.
+* Phép toán chia lấy dư `%` (modulo) để tạo vòng lặp cho ranh giới chỉ mục:
+  - **Next**: `(index + 1) % length`
+  - **Prev**: `(index - 1 + length) % length`
 
 ### Hướng dẫn triển khai từng bước (`Testimonials.jsx`)
 
-Tạo tệp component tại `src/components/Testimonials.jsx` và viết đoạn mã sau:
+Tạo tệp `src/components/Testimonials.jsx` và chèn đoạn mã sau:
 
 ```jsx
 import { useState } from 'react';
@@ -27,31 +27,31 @@ export const Testimonials = () => {
   const testimonials = [
     {
       id: 1,
-      quote: "React 19 thực sự thay đổi cuộc chơi! Bộ compiler tự động hóa việc memoize vô cùng tối ưu.",
+      quote: "React 19 is absolutely game-changing! The compiler handles memoization perfectly.",
       author: "Sarah Connor",
-      role: "Kiến trúc sư phần mềm chính"
+      role: "Lead Software Architect"
     },
     {
       id: 2,
-      quote: "Xây dựng custom hook chưa bao giờ trực quan thế này. Mã nguồn của tôi sạch và dễ tái sử dụng hơn.",
+      quote: "Creating custom hooks has never been this intuitive. My code is cleaner and more reusable.",
       author: "Alex Mercer",
-      role: "Kỹ sư Frontend cấp cao"
+      role: "Senior Frontend Engineer"
     },
     {
       id: 3,
-      quote: "Quản lý state bằng Zustand và Redux Toolkit trở nên rất đơn giản sau khi hoàn thành khóa học này.",
+      quote: "State management using Zustand and Redux Toolkit is extremely simple after taking this course.",
       author: "Elena Rostova",
-      role: "Lập trình viên Fullstack"
+      role: "Fullstack Web Developer"
     }
   ];
 
   const handleNext = () => {
-    // Quay lại 0 khi vượt quá phần tử cuối cùng
+    // Loop back to 0 when passing the last element
     setIndex((prev) => (prev + 1) % testimonials.length);
   };
 
   const handlePrev = () => {
-    // Quay lại phần tử cuối cùng khi giảm xuống dưới 0
+    // Loop back to the last element when passing 0
     setIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   };
 
@@ -59,16 +59,16 @@ export const Testimonials = () => {
 
   return (
     <div style={styles.card}>
-      <h2 style={styles.title}>Dự án 7: Slide đánh giá</h2>
+      <h2 style={styles.title}>Project 7: Testimonials Slider</h2>
       <div style={styles.quoteBox}>
         <p style={styles.quote}>"{current.quote}"</p>
         <h4 style={styles.author}>— {current.author}</h4>
         <span style={styles.role}>{current.role}</span>
       </div>
       <div style={styles.nav}>
-        <button style={styles.btn} onClick={handlePrev}>⟵ Quay lại</button>
+        <button style={styles.btn} onClick={handlePrev}>⟵ Back</button>
         <span style={styles.counter}>{index + 1} / {testimonials.length}</span>
-        <button style={styles.btn} onClick={handleNext}>Tiếp theo ⟶</button>
+        <button style={styles.btn} onClick={handleNext}>Next ⟶</button>
       </div>
     </div>
   );
@@ -138,20 +138,20 @@ const styles = {
 
 ---
 
-## 🗂️ Dự án 8: Khung câu hỏi thu gọn (Accordion)
+## 🗂️ Dự án 8: Accordion Component
 
-Accordion là giao diện gồm các tiêu đề câu hỏi, khi nhấp vào sẽ mở rộng để hiển thị câu trả lời bên dưới. Chúng ta có 2 cách thiết kế:
-1. **Multi-Open Accordion**: Mỗi mục tự quản lý trạng thái đóng/mở của mình. Nhiều mục có thể mở cùng lúc.
-2. **Single-Open Accordion**: ID của mục đang mở được lưu trữ ở component Cha. Mở một mục mới sẽ tự động đóng toàn bộ các mục khác.
+Accordion chứa các tiêu đề (header) khi nhấp vào sẽ mở rộng để hiển thị câu trả lời. Chúng ta có thể tổ chức chúng theo hai cách:
+1. **Multi-Open Accordion**: Mỗi mục tự quản lý state đóng/mở của riêng nó. Nhiều mục có thể mở cùng một lúc.
+2. **Single-Open Accordion**: ID của mục đang hoạt động được lưu trong component cha. Mở một mục sẽ tự động đóng tất cả các mục khác.
 
-### Hướng dẫn triển khai kiểu Multi-Open (`Accordion.jsx`)
+### Hướng dẫn triển khai từng bước kiểu Multi-Open (`Accordion.jsx`)
 
-Tạo tệp component tại `src/components/Accordion.jsx` và viết đoạn mã sau:
+Tạo tệp `src/components/Accordion.jsx` và chèn đoạn mã sau:
 
 ```jsx
 import { useState } from 'react';
 
-// Component con - tự quản lý trạng thái đóng/mở độc lập
+// Child Component - manages its own independent state
 const AccordionItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -162,7 +162,7 @@ const AccordionItem = ({ question, answer }) => {
         <span style={accStyles.icon}>{isOpen ? "▼" : "►"}</span>
       </div>
       
-      {/* Hiển thị chiều cao động bằng CSS transition */}
+      {/* Smooth CSS height rendering simulation */}
       <div 
         style={{
           ...accStyles.content,
@@ -177,22 +177,22 @@ const AccordionItem = ({ question, answer }) => {
   );
 };
 
-// Component cha
+// Parent Component
 export const Accordion = () => {
   return (
     <div style={accStyles.container}>
-      <h2 style={{ textAlign: "center", color: "#2c3e50" }}>Dự án 8: Khung Accordion</h2>
+      <h2 style={{ textAlign: "center", color: "#2c3e50" }}>Project 8: Accordion</h2>
       <AccordionItem 
-        question="1. DOM ảo (Virtual DOM) trong React là gì?" 
-        answer="Là bản sao gọn nhẹ của DOM thực tế trong bộ nhớ, dùng để React tính toán so sánh các điểm khác biệt (diffing) và thực hiện các bản cập nhật nhanh nhất lên trình duyệt." 
+        question="1. What is the React Virtual DOM?" 
+        answer="A lightweight, in-memory copy of the browser DOM that React uses to run diffing checks and execute highly performant visual updates." 
       />
       <AccordionItem 
-        question="2. Props khác State như thế nào?" 
-        answer="Props là dữ liệu đầu vào truyền từ component cha xuống con (chỉ đọc), còn state là trạng thái riêng tư do component tự quản lý bên trong." 
+        question="2. How do props differ from state?" 
+        answer="Props are inputs passed from parent components to child components (read-only), while state is private data managed internally by the component itself." 
       />
       <AccordionItem 
-        question="3. Khi nào bạn nên sử dụng useEffect?" 
-        answer="Khi thực hiện các tác vụ tương tác với thế giới bên ngoài (side effects) như gọi API mạng, thao tác DOM thủ công hoặc cài đặt bộ hẹn giờ." 
+        question="3. When should you use useEffect?" 
+        answer="When performing operations that reach outside the React component render loop, such as network requests, manual DOM mutations, or timers." 
       />
     </div>
   );
@@ -242,47 +242,47 @@ const accStyles = {
 
 ## 🧠 Kiểm tra kiến thức
 
-Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của bạn. Nhấp vào **Reveal Answer** để xác nhận câu trả lời.
+Trả lời các câu hỏi sau để kiểm tra mức độ hiểu của bạn về các dự án nhập môn này. Nhấp vào **Reveal Answer** để xác nhận.
 
-### 1. Trong phần Slider, thuật toán chia lấy dư `(index + 1) % length` khi click "Next" hoạt động ra sao?
+### 1. Trong một Slider, phép toán chia lấy dư `(index + 1) % length` hoạt động như thế nào khi nhấp "Next"?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Phép toán chia lấy dư trả về số dư của phép chia. Đối với danh sách có 3 phần tử (length = 3):
-  - Khi `index = 0`, `(0 + 1) % 3` trả về dư `1`.
-  - Khi `index = 1`, `(1 + 1) % 3` trả về dư `2`.
-  - Khi `index = 2` (phần tử cuối), `(2 + 1) % 3` tức 3 chia 3 dư `0`. Chỉ số index quay về `0` (phần tử đầu tiên), giúp slide quay vòng lặp.
+  Phép toán chia lấy dư trả về phần dư của phép chia. Với một danh sách gồm 3 phần tử (length = 3):
+  - Khi `index = 0`, `(0 + 1) % 3` trả về `1`.
+  - Khi `index = 1`, `(1 + 1) % 3` trả về `2`.
+  - Khi `index = 2` (phần tử cuối cùng), `(2 + 1) % 3` (3 chia 3) trả về `0` (dư 0), đưa slider quay vòng về phần tử đầu tiên.
 </details>
 
-### 2. Một accordion kiểu Single-Open khác kiểu Multi-Open thế nào về cấu trúc?
+### 2. Về mặt kiến trúc, một accordion single-open khác với một accordion multi-open như thế nào?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  - Giao diện **multi-open**: Mỗi component con tự quản lý state `isOpen` riêng biệt nên chúng hoạt động hoàn toàn độc lập với nhau.
-  - Giao diện **single-open**: Component cha quản lý state `activeId` của mục đang mở. Component cha truyền prop xuống con: `isOpen={activeId === itemId}` kèm theo một hàm callback để cập nhật lại ID đó. Trạng thái được **nâng lên (lifted up)** component cha.
+  - Trong một accordion **multi-open**, mỗi mục con có state `isOpen` cục bộ của riêng nó, khiến chúng độc lập với nhau.
+  - Trong một accordion **single-open**, component cha quản lý một state `activeId`. Component cha truyền xuống một giá trị boolean (`isOpen={activeId === itemId}`) và một handler để cập nhật ID. State được **nâng lên (lifted up)** component cha.
 </details>
 
-### 3. Tại sao chúng ta cần định nghĩa chiều cao giới hạn `maxHeight` khi làm hiệu ứng trượt Accordion?
+### 3. Mối nguy hiểm của việc không chỉ định giới hạn chiều cao hay `maxHeight` khi tạo hiệu ứng mở rộng accordion là gì?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Trình duyệt không thể tính toán chuyển động CSS transition trực tiếp từ chiều cao `0px` lên `auto`. Việc đặt giới hạn chiều cao `maxHeight: 150px` hoặc sử dụng tỷ lệ scale giúp trình duyệt tính toán được các khung hình trung gian để tạo hiệu ứng mở rộng mượt mà.
+  Bạn không thể tạo hiệu ứng chiều cao trực tiếp từ `0px` đến `auto` bằng các CSS transition tiêu chuẩn. Việc tạo hiệu ứng đến `maxHeight: 150px` hoặc sử dụng các phép biến đổi scale cho phép engine trình duyệt tính toán các khung hình chuyển tiếp, mang lại hiệu ứng mở rộng mượt mà.
 </details>
 
-### 4. Kết quả của phép tính `(index - 1 + length) % length` khi index bằng 0 là bao nhiêu, tại sao cần cộng thêm `length`?
+### 4. Giá trị của `(index - 1 + length) % length` là bao nhiêu khi index bằng 0, và tại sao lại cộng thêm `+ length`?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Với mảng có chiều dài 3, đi lùi từ index 0:
+  Với một danh sách có chiều dài 3, nếu chúng ta bắt đầu ở index 0 và đi lùi:
   `(-1 + 3) % 3 = 2 % 3 = 2`.
-  Cộng thêm `length` giúp số bị chia luôn là số dương. Trong JavaScript, phép chia lấy dư số âm sẽ trả về kết quả âm (ví dụ: `-1 % 3 = -1`), điều này sẽ gây ra lỗi truy cập ngoài phạm vi index của mảng.
+  Việc cộng thêm `length` đảm bảo số bị chia luôn dương. Trong JavaScript, phép chia lấy dư trên số âm cho ra kết quả âm (ví dụ `-1 % 3 = -1`), điều này sẽ gây ra lỗi truy cập index ngoài phạm vi (out-of-bounds).
 </details>
 
-### 5. Tại sao cần thiết lập thuộc tính CSS `userSelect: "none"` trên tiêu đề của accordion?
+### 5. Tại sao chúng ta đặt `userSelect: "none"` trên các tiêu đề accordion?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Vì khi người dùng nhấp đúp chuột nhanh để đóng mở accordion, trình duyệt sẽ hiểu nhầm và bôi đen (select) văn bản tiêu đề đó. Thuộc tính `userSelect: "none"` ngăn cản việc bôi đen này, giúp nút bấm hoạt động tự nhiên như nút của hệ thống.
+  Bởi vì việc nhấp nhanh vào tiêu đề để mở rộng/thu gọn nó có thể khiến trình duyệt bôi đen/chọn (highlight/select) văn bản câu hỏi. Đặt `userSelect: "none"` ngăn việc bôi đen văn bản, khiến nút bấm có cảm giác như một widget desktop gốc (native).
 </details>
 
 ---
@@ -291,15 +291,15 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của b
 
 Áp dụng những gì bạn đã học vào dự án React của mình:
 
-### 🛠️ Bài tập 1: Tự động chạy Slide (Autoplay Carousel)
-1. Mở file `Testimonials.jsx`.
-2. Thiết lập một `useEffect` để chạy bộ đếm thời gian tự động gọi hàm `handleNext()` sau mỗi 4 giây.
-3. **LƯU Ý QUAN TRỌNG**: Trả về hàm dọn dẹp (cleanup) gọi `clearInterval` để tránh chồng chất các bộ đếm thời gian khi người dùng click đổi slide thủ công hoặc tắt component.
+### 🛠️ Bài tập 1: Testimonial Carousel Tự động chạy (Autoplay)
+1. Mở `Testimonials.jsx`.
+2. Thiết lập một hook `useEffect` để chạy một interval timer gọi `handleNext()` sau mỗi 4 giây.
+3. **QUAN TRỌNG**: Trả về một hàm cleanup bên trong effect để chạy `clearInterval`, nhằm tránh việc nhiều timer chồng chất lên nhau khi component được nhấp hoặc bị unmount.
 
 ### 🛠️ Bài tập 2: Chuyển đổi sang Accordion Single-Open
-1. Sửa lại tệp `Accordion.jsx`.
-2. Chuyển state đóng mở lên component cha: `const [activeId, setActiveId] = useState(null)`.
-3. Truyền các props thích hợp xuống `AccordionItem`:
+1. Tái cấu trúc (refactor) `Accordion.jsx`.
+2. Chuyển việc quản lý state lên component cha: `const [activeId, setActiveId] = useState(null)`.
+3. Truyền props xuống `AccordionItem`:
    - `isOpen={activeId === item.id}`
    - `onToggle={() => setActiveId(activeId === item.id ? null : item.id)}`
-4. Kiểm tra để đảm bảo việc mở một accordion mới sẽ tự động thu gọn các mục khác.
+4. Xác nhận rằng việc mở một mục accordion sẽ thu gọn các mục đang hoạt động khác.

@@ -1,42 +1,42 @@
 # Hook `useContext` ⚓
 
-Hook **`useContext`** là giải pháp tích hợp sẵn của React cho việc quản lý trạng thái toàn cục (global state management). Nó cho phép bạn chia sẻ trạng thái, hàm xử lý hoặc cấu hình cài đặt xuyên suốt cây component mà không cần truyền props thủ công qua từng cấp trung gian. Vấn đề truyền props qua nhiều cấp không cần thiết này được gọi là **"Props Drilling"** (Khoan Props).
+Hook **`useContext`** là giải pháp tích hợp sẵn của React cho việc quản lý trạng thái toàn cục (global state management). Nó cho phép bạn chia sẻ state, hàm xử lý hoặc cấu hình cài đặt xuyên suốt cây component mà không cần truyền props thủ công qua từng cấp trung gian. Vấn đề truyền props qua những cấp không cần đến chúng này được gọi là **"Props Drilling"** (Khoan Props).
 
 ### 💡 Ví dụ thực tế dễ hiểu
 Hãy tưởng tượng hệ thống phát thanh thông báo của một công ty.
-- **Props Drilling**: Giám đốc điều hành có một thông báo. Họ nói với Giám đốc bộ phận, người này báo lại cho Trưởng phòng, Trưởng phòng báo cho Tổ trưởng, và cuối cùng Tổ trưởng mới truyền đạt tới nhân viên. Những người trung gian bắt buộc phải làm người đưa tin mặc dù họ không cần quan tâm đến nội dung thông báo.
-- **Context API**: Giám đốc điều hành chỉ cần nói trực tiếp qua loa phát thanh toàn công ty (**Provider**). Bất kỳ nhân viên nào muốn nghe chỉ cần bật thiết bị thu âm trên bàn của họ (**Consumer / `useContext`**), bỏ qua hoàn toàn tất cả những khâu trung gian.
+- **Props Drilling**: CEO có một thông báo. Họ nói với Giám đốc, người này báo lại cho Trưởng phòng, Trưởng phòng báo cho Tổ trưởng, và cuối cùng Tổ trưởng mới truyền đạt tới nhân viên. Những người trung gian buộc phải đóng vai người đưa tin mặc dù họ không quan tâm đến nội dung thông báo.
+- **Context API**: CEO chỉ cần nói trực tiếp qua loa phát thanh toàn tòa nhà (**Provider**). Bất kỳ nhân viên nào muốn nghe chỉ cần bật loa trên bàn làm việc của họ (**Consumer / `useContext`**), bỏ qua hoàn toàn những khâu trung gian.
 
 ---
 
 ## ⚡ 1. Quy trình 3 bước Thiết lập Context
 
-Để sử dụng Context, bạn cần tuân theo quy trình 3 bước sau:
+Để sử dụng Context, bạn phải tuân theo quy trình ba bước sau:
 
 ```mermaid
 graph TD
-    A["1. Tạo Context <br> (createContext)"] --> B["2. Bao bọc cây Component bằng Provider <br> (ThemeContext.Provider)"]
-    B --> C["3. Sử dụng giá trị ở bất cứ đâu <br> (useContext)"]
+    A["1. Create Context <br> (createContext)"] --> B["2. Wrap Tree in Provider <br> (ThemeContext.Provider)"]
+    B --> C["3. Consume Value anywhere <br> (useContext)"]
 ```
 
-1. **Tạo Context**: Định nghĩa cấu trúc dữ liệu bằng hàm `createContext()`.
-2. **Cung cấp Context (Provide)**: Bao bọc cây component của bạn trong thẻ `<MyContext.Provider value={data}>` để cung cấp dữ liệu cho toàn bộ các component con.
-3. **Tiêu thụ Context (Consume)**: Sử dụng hook `useContext(MyContext)` bên trong bất kỳ component con nào để đọc trực tiếp giá trị dùng chung.
+1. **Tạo Context**: Định nghĩa cấu trúc dữ liệu bằng `createContext()`.
+2. **Cung cấp Context (Provide)**: Bao bọc cây component của bạn trong `<MyContext.Provider value={data}>` để cung cấp giá trị cho toàn bộ các component con.
+3. **Tiêu thụ Context (Consume)**: Sử dụng `useContext(MyContext)` bên trong bất kỳ component con nào để đọc giá trị dùng chung.
 
 ---
 
 ## 🧩 2. Ví dụ mã nguồn hoàn chỉnh: Trình chuyển đổi giao diện (Theme Switcher)
 
-Chúng ta hãy xây dựng một Theme Provider hoàn chỉnh để quản lý trạng thái giao diện `"light"` (sáng) hoặc `"dark"` (tối):
+Hãy xây dựng một Theme Provider hoàn chỉnh để quản lý giao diện `"light"` hoặc `"dark"`:
 
 ### Bước 1 & 2: Tạo và Cung cấp Context (`ThemeContext.jsx`)
 ```jsx
 import { createContext, useState } from 'react';
 
-// 1. Tạo Context
+// 1. Create the Context
 export const ThemeContext = createContext();
 
-// 2. Xây dựng Provider Component
+// 2. Build the Provider Component
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState("light");
 
@@ -68,13 +68,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 );
 ```
 
-### Bước 4: Tiêu thụ Context trong các component con (`ThemeButton.jsx`)
+### Bước 4: Tiêu thụ Context trong các component lồng nhau (`ThemeButton.jsx`)
 ```jsx
 import { useContext } from 'react';
 import { ThemeContext } from './context/ThemeContext';
 
 const ThemeButton = () => {
-  // 3. Sử dụng context thông qua hook
+  // 3. Consume the context using the hook
   const { theme, toggleTheme } = useContext(ThemeContext);
 
   const containerStyles = {
@@ -86,8 +86,8 @@ const ThemeButton = () => {
 
   return (
     <div style={containerStyles}>
-      <p>Giao diện hiện tại là: <strong>{theme}</strong></p>
-      <button onClick={toggleTheme}>Chuyển giao diện</button>
+      <p>The current theme is: <strong>{theme}</strong></p>
+      <button onClick={toggleTheme}>Toggle Theme</button>
     </div>
   );
 };
@@ -100,53 +100,53 @@ export default ThemeButton;
 ## 🚀 3. Cảnh báo hiệu năng: Hiện tượng Re-render của Context
 
 > [!WARNING]
-> Khi thuộc tính `value` của một Context Provider thay đổi, **tất cả** các component tiêu thụ context đó thông qua hàm `useContext` sẽ tự động bị re-render. Việc này xảy ra bất kể component đó có sử dụng phần thuộc tính bị thay đổi của đối tượng state hay không.
+> Khi thuộc tính `value` của một Context Provider thay đổi, **tất cả** các component tiêu thụ context đó thông qua `useContext` sẽ tự động bị re-render. Điều này xảy ra bất kể chúng chỉ tiêu thụ một phần nhỏ của đối tượng state hay không.
 
-### Các thực tiễn tốt nhất để tối ưu hóa hiệu năng:
-* **Giữ Context nhỏ và tập trung**: Đừng đưa toàn bộ trạng thái của ứng dụng vào một context toàn cục duy nhất. Hãy chia nhỏ thành nhiều context riêng biệt như `AuthContext`, `ThemeContext`, `CartContext`.
-* **Tách biệt State và Dispatch**: Đối với các trường hợp phức tạp, hãy tạo một context riêng để lưu trữ giá trị state và một context khác để lưu trữ các hàm xử lý hành động (dispatch functions), tránh việc re-render các component chỉ cần gọi hàm mà không cần đọc state.
+### Các thực tiễn tốt nhất để tối ưu hóa:
+* **Giữ Context nhỏ gọn và tập trung**: Đừng đưa toàn bộ state của ứng dụng vào một context toàn cục duy nhất. Hãy tạo các context riêng biệt như `AuthContext`, `ThemeContext`, `CartContext`.
+* **Tách biệt State và Dispatch**: Đối với các tình huống phức tạp, hãy tạo một context cho các giá trị state và một context riêng cho các hàm xử lý hành động (functions), nhằm tránh việc re-render các component vốn chỉ kích hoạt hành động khi state thay đổi.
 
 ---
 
 ## 🧠 Kiểm tra kiến thức
 
-Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của bạn về `useContext`. Nhấp vào **Reveal Answer** để xác nhận câu trả lời.
+Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của bạn về `useContext`. Nhấp vào **Reveal Answer** để xác nhận.
 
-### 1. "Props Drilling" là gì và tại sao nó được coi là một bad practice (thực tiễn xấu) trong React?
+### 1. "Props Drilling" là gì và tại sao nó được coi là một thực tiễn xấu (bad practice) trong React?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Props drilling là quá trình truyền dữ liệu props qua nhiều cấp component lồng nhau, đi xuống một component con ở rất sâu bên dưới cần sử dụng dữ liệu, trong khi các component trung gian hoàn toàn không dùng đến dữ liệu đó. 
-  Nó là một bad practice vì gây ra sự phụ thuộc chặt chẽ giữa các component (coupling), làm phình to mã nguồn bằng các tham số dư thừa, và khiến việc tái cấu trúc hoặc di chuyển vị trí component trong cây giao diện trở nên rất khó khăn.
+  Props drilling là quá trình truyền props qua nhiều cấp component lồng nhau, đi xuống một component con ở rất sâu bên dưới vốn cần dữ liệu, trong khi các component trung gian hoàn toàn không sử dụng đến nó.
+  Nó là một thực tiễn xấu vì gây ra sự phụ thuộc chặt chẽ (tight coupling), làm phình to các component bằng những tham số dư thừa, và khiến việc tái cấu trúc hoặc di chuyển component trong cây giao diện trở nên khó khăn.
 </details>
 
 ### 2. Điều gì xảy ra với các component đang tiêu thụ một context khi giá trị value của provider thay đổi?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Mọi component gọi hàm `useContext(MyContext)` sẽ tự động re-render khi thuộc tính `value` truyền vào provider thay đổi, ngay cả khi component đó không hiển thị trực tiếp dữ liệu thuộc tính con vừa thay đổi.
+  Mọi component gọi `useContext(MyContext)` sẽ tự động re-render khi `value` truyền vào provider thay đổi, ngay cả khi component đó không phụ thuộc về mặt hiển thị vào thuộc tính con cụ thể vừa thay đổi.
 </details>
 
-### 3. Chúng ta có thể thiết lập giá trị mặc định trong hàm `createContext()` không? Nó được sử dụng khi nào?
+### 3. Chúng ta có thể thiết lập giá trị mặc định trong `createContext()` không? Nó được sử dụng khi nào?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Có, bạn hoàn toàn có thể truyền giá trị mặc định: `const MyContext = createContext(defaultValue)`. 
-  Giá trị mặc định này sẽ được sử dụng **chỉ khi** một component gọi hàm `useContext` để lấy dữ liệu nhưng component đó không nằm bên trong (không được bao bọc bởi) bất kỳ thẻ `<MyContext.Provider>` nào trên cây component.
+  Có, bạn có thể truyền vào một giá trị mặc định: `const MyContext = createContext(defaultValue)`.
+  Giá trị mặc định này **chỉ** được sử dụng khi một component cố gắng tiêu thụ context bằng `useContext` nhưng lại không được bao bọc bên trong một `<MyContext.Provider>` tổ tiên tương ứng nào trên cây component.
 </details>
 
-### 4. Chúng ta có thể dùng nhiều Context Provider khác nhau trong cùng một ứng dụng React không?
+### 4. Chúng ta có thể dùng nhiều context provider khác nhau trong cùng một ứng dụng React không?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Có. Bạn có thể lồng bao nhiêu provider tùy thích (ví dụ: lồng `<ThemeProvider>` bên trong `<AuthProvider>`). Các component con bên dưới sẽ có quyền truy cập vào tất cả các context mà chúng được bao bọc.
+  Có. Bạn có thể lồng bao nhiêu provider tùy nhu cầu (ví dụ: bao bọc `<ThemeProvider>` bên trong `<AuthProvider>`). Các component bên dưới cây sẽ có quyền truy cập vào tất cả các context mà chúng được bao bọc.
 </details>
 
-### 5. Tại sao Context API không thể thay thế hoàn toàn các công cụ quản lý state chuyên nghiệp như Redux hay Zustand trong các ứng dụng lớn?
+### 5. Tại sao Context API không phải là sự thay thế hoàn chỉnh cho các công cụ quản lý state như Redux hay Zustand trong các ứng dụng lớn?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Không giống như Redux hay Zustand, React Context không có cơ chế lọc (selectors) tích hợp sẵn để ngăn chặn việc re-render không cần thiết khi chỉ một nhánh nhỏ của một đối tượng state lớn thay đổi. Trong các ứng dụng lớn và có tần suất cập nhật dữ liệu cao, điều này có thể gây nghẽn hiệu năng. Context phù hợp nhất cho các dữ liệu ít khi cập nhật như giao diện (theme), ngôn ngữ hiển thị (localization) hoặc phiên đăng nhập của người dùng.
+  Không giống như Redux hay Zustand, React Context không có cơ chế selectors tích hợp sẵn để ngăn chặn việc re-render không cần thiết khi chỉ một nhánh nhỏ (slice) của một state lớn được cập nhật. Trong các ứng dụng lớn và có tần suất thay đổi cao, điều này có thể dẫn đến nghẽn hiệu năng. Context phù hợp nhất cho các cập nhật tần suất thấp như giao diện (theme) của người dùng, ngôn ngữ hiển thị, hoặc phiên đăng nhập của người dùng.
 </details>
 
 ---
@@ -155,14 +155,14 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của b
 
 Áp dụng những gì bạn đã học vào dự án React của mình:
 
-### 🛠️ Bài tập 1: Xây dựng Auth Context (Xác thực đăng nhập)
+### 🛠️ Bài tập 1: User Authentication Context
 1. Tạo một tệp `AuthContext.jsx` trong dự án của bạn.
-2. Khởi tạo một state `user` có giá trị mặc định là `null`.
-3. Cung cấp đối tượng `user`, một hàm `login(username)` (để gán tên đăng nhập cho user), và hàm `logout()` (để đặt trạng thái user về lại `null`).
-4. Bao bọc toàn bộ ứng dụng của bạn bằng thẻ `<AuthProvider>` trong tệp `main.jsx`.
+2. Khởi tạo state `user` với giá trị `null`.
+3. Cung cấp đối tượng `user`, một hàm `login(username)` (đặt tên người dùng), và một hàm `logout()` (đặt lại user về `null`).
+4. Bao bọc toàn bộ ứng dụng của bạn bên trong `<AuthProvider>` trong tệp `main.jsx`.
 
-### 🛠️ Bài tập 2: Widget thông tin người dùng và Thanh điều hướng
+### 🛠️ Bài tập 2: Widget trạng thái người dùng và Header
 1. Tạo một component `Header.jsx` hiển thị logo công ty và một thông điệp trạng thái đăng nhập.
-2. Tiêu thụ `AuthContext` để hiển thị "Xin chào, [Username]!" nếu người dùng đã đăng nhập, hoặc hiển thị "Vui lòng đăng nhập" nếu trạng thái user là `null`.
-3. Tạo một component `LoginPanel.jsx` gồm một ô nhập văn bản và một nút bấm submit. Khi submit, gọi hàm `login` của context. Nếu người dùng đã đăng nhập, hiển thị nút "Đăng xuất" (logout) thay thế.
-4. Render cả `<Header />` và `<LoginPanel />` vào tệp `App.jsx` để chạy thử nghiệm hệ thống đăng nhập dùng chung này.
+2. Tiêu thụ `AuthContext` để hiển thị "Welcome, [Username]!" nếu đã đăng nhập, hoặc "Please log in" nếu user là `null`.
+3. Tạo một component `LoginPanel.jsx` gồm một ô nhập văn bản và một nút submit. Khi submit, gọi hàm `login` của context. Nếu đã đăng nhập, hiển thị nút "Logout" thay thế.
+4. Render cả `<Header />` và `<LoginPanel />` trong tệp `App.jsx` của bạn để kiểm thử hệ thống đăng nhập tích hợp này.
