@@ -42,7 +42,7 @@ It is common to confuse **ESLint** and **Prettier** since both inspect your code
 | **Fixes** | Warns about logic flaws (can fix simple syntax via `--fix`) | Auto-rewrites files to match the style guide exactly |
 | **Examples** | `no-unused-vars`, `react-hooks/rules-of-hooks` | `semi: false`, `singleQuote: true` |
 
-**The Analogy:** Think of ESLint as your **Grammar Editor** (ensuring your sentences make sense and follow syntax rules) and Prettier as your **Graphic Designer** (aligning margins, spacing, and margins to make the paper look neat).
+**The Analogy:** Think of ESLint as your **Grammar Editor** (ensuring your sentences make sense and follow syntax rules) and Prettier as your **Graphic Designer** (aligning margins, spacing, and fonts to make the paper look neat).
 
 ---
 
