@@ -155,3 +155,57 @@ If you want to write React code instantly inside a single HTML file without inst
 | **Learning core concepts & UI building** | **React + Vite** | `npm create vite@latest` |
 | **Production apps, SEO-heavy sites, or APIs** | **Next.js Framework** | `npx create-next-app` |
 | **Quick one-file experiments** | **CDN scripts** | *Plain HTML file* |
+
+---
+
+## 🧠 Test Your Knowledge
+
+Answer these questions to check your understanding of React installation. Click on **Reveal Answer** to verify your answers.
+
+### 1. Why is `create-react-app` no longer recommended for starting new React projects?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  `create-react-app` (CRA) is deprecated because:
+  - It is no longer maintained by the React core team.
+  - It is built on Webpack, which is significantly slower compared to modern bundlers like Vite (esbuild/rollup) or Next.js (turbopack).
+  - It does not support modern features like React Server Components (RSC).
+</details>
+
+### 2. What is the difference between setting up React using Vite vs. using Next.js?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  - **Vite** is a client-side build tool. It delivers a blank HTML file and lets the browser run JavaScript to render the page (Client-Side Rendering - CSR). It is best for dashboards, learning, and simple single-page applications.
+  - **Next.js** is a full-stack framework. It renders the pages on the server first before sending them to the browser (Server-Side Rendering - SSR). It is best for production, SEO-sensitive sites, and full-stack projects.
+</details>
+
+### 3. What is the purpose of `npm install`? Where does it download the packages to?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  `npm install` reads the `package.json` file in your project, looks up all the listed dependencies and developer tools, and downloads them. All downloaded packages are stored inside the local `node_modules/` folder in the root directory.
+</details>
+
+### 4. What command starts the local development server for a Vite-based React project?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  `npm run dev`
+</details>
+
+### 5. In the interactive Vite installation, what are the differences between ESLint and Oxlint?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  - **ESLint** is the industry-standard linter. It is highly mature, supports hundreds of custom plugins (for React, hooks, etc.), and is widely used across most codebases.
+  - **Oxlint** is a new linter written in Rust. It is extremely fast (50-100x faster than ESLint) but does not yet support the extensive plugin ecosystem or complex custom rules that ESLint does.
+</details>
+
+### 6. In the interactive Vite setup, if you select "Yes" to "Install with npm and start now", what step can you skip afterwards?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  You can skip running the manual **`npm install`** command in your terminal because Vite's installer will automatically run it and download your dependencies before exiting.
+</details>
+

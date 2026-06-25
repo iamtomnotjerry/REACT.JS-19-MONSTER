@@ -99,3 +99,52 @@ src/
 ├── index.css
 └── main.jsx
 ```
+
+---
+
+## 🧠 Test Your Knowledge
+
+Answer these questions to check your understanding of React folder structure. Click on **Reveal Answer** to verify your answers.
+
+### 1. Where does React inject your entire application in the browser? Identify the file and the specific HTML element.
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  React injects your entire application into the **`index.html`** file, specifically inside the `<div id="root"></div>` element located in the HTML `<body>`.
+</details>
+
+### 2. What is the difference between `main.jsx` and `App.jsx`? What are their respective roles?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  - **`main.jsx`** is the entry point of the React application. Its sole job is to grab the `#root` element from the HTML and mount the React virtual root onto it using `createRoot().render()`.
+  - **`App.jsx`** is the root component of your application. It contains the visual layout and structure, and acts as the parent container for all other custom React components you build.
+</details>
+
+### 3. What is the difference between the `public/` folder and the `src/assets/` folder? How does Vite process them differently?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  - **`public/`**: Assets here are served directly by the server exactly as they are. Vite does **not** process, bundle, or minify them. They are accessed using root relative paths (e.g. `/favicon.svg`).
+  - **`src/assets/`**: Assets here are processed, compiled, and bundled by Vite. Vite optimizes images, builds CSS, and can add hashes to file names for browser caching. They must be imported in your JS/JSX files (e.g. `import logo from './assets/logo.png'`).
+</details>
+
+### 4. Why should you never commit the `node_modules/` folder to GitHub? How does a new developer get those packages after cloning?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  You should never commit `node_modules/` because:
+  - It is extremely large (often hundreds of megabytes) and contains thousands of small files, which slows down Git commands.
+  - The exact list of packages is already tracked inside `package.json` and `package-lock.json`.
+  - A new developer can download them instantly after cloning by running **`npm install`** in the project directory.
+</details>
+
+### 5. What is the purpose of `package.json`? Explain the difference between `dependencies` and `devDependencies`.
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  `package.json` is the configuration manifest file of your Node.js project.
+  - **`dependencies`**: Libraries required for the application to run in production (e.g., `react`, `react-dom`).
+  - **`devDependencies`**: Libraries and tools only required during local development, testing, or building (e.g., `vite`, `eslint`, compilers).
+</details>
+

@@ -53,3 +53,51 @@ const Welcome = () => {
 
 ---
 Hopefully, this gives you a clear mental model of ReactJS before we start writing our first lines of code!
+
+---
+
+## 🧠 Test Your Knowledge
+
+Answer these questions to check your understanding of ReactJS. Click on **Reveal Answer** to verify your answers.
+
+### 1. Is ReactJS a framework or a library? Explain the primary difference.
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  ReactJS is a **library**, not a framework. 
+  - **Frameworks** (like Angular or Vue) dictate the structure of your application and call your code when needed (Inversion of Control).
+  - **Libraries** (like React) give you control. You import React where you need it to build UI, and you are free to choose other libraries for routing, state management, and styling.
+</details>
+
+### 2. What is the Virtual DOM? Explain the 3 steps React takes when data changes.
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  The Virtual DOM is a lightweight, in-memory copy of the Real DOM. When state changes, React:
+  1. **Renders** a new Virtual DOM tree representing the updated UI.
+  2. **Compares** (Diffing) the new Virtual DOM with the previous one to find exact differences.
+  3. **Updates** (Reconciliation) only the changed parts in the Real DOM, instead of re-rendering the whole page.
+</details>
+
+### 3. What is the difference between Imperative UI and Declarative UI?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  - **Imperative UI** (e.g. Vanilla JS): You write step-by-step instructions telling the browser *how* to update the UI (e.g., search element, add class, modify text content).
+  - **Declarative UI** (e.g. React): You describe *what* the UI should look like based on the current state. When state changes, React handles the step-by-step DOM updates automatically.
+</details>
+
+### 4. What does "Component-Based Architecture" mean?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  It means splitting the user interface into small, self-contained, and reusable pieces called **components** (like Lego blocks). Each component manages its own structure, style, and logic, making large applications easier to build, test, and maintain.
+</details>
+
+### 5. What is JSX? Is JSX valid JavaScript that browsers can read directly?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  **JSX** (JavaScript XML) is a syntax extension for JavaScript that allows you to write HTML-like tags directly inside JavaScript. It is **not** valid JavaScript for browsers; it must be compiled into standard JavaScript (using tools like Babel or the new React Compiler) before the browser can execute it.
+</details>
+
