@@ -6,7 +6,7 @@
 
 ## 📖 Concept & Overview
 
-In standard React, fetching data is done manually with `useState` and `useEffect`. That approach forces you to hand-write loading flags, error flags, `try/catch` blocks, race-condition guards, and re-fetch logic in **every** component that touches the network. It works, but it gets messy and repetitive fast.
+In standard React, data fetching is done manually with `useState` and `useEffect`. That approach forces you to hand-write loading flags, error flags, `try/catch` blocks, race-condition guards, and re-fetch logic in **every** component that touches the network. It works, but it gets messy and repetitive fast.
 
 TanStack Query treats **server state** as a fundamentally different thing from **client state**. Server state lives on a remote machine you don't own, can become outdated at any moment, and is shared across many components. TanStack Query gives you caching, background refetching, request deduplication, polling, and parallel queries — all out of the box.
 
@@ -22,15 +22,15 @@ Think of `QueryClient` as a **restaurant kitchen with a pass-through window**:
 
 - A **`queryKey`** is the name on a customer's order ticket (e.g. "Table 4: Pasta").
 - The **`queryFn`** is the chef who actually cooks the dish.
-- The **cache** is the warming shelf at the pass. If a freshly cooked "Pasta" is already sitting on the shelf and is still warm (**fresh / within `staleTime`**), the next waiter who asks for "Pasta" gets it instantly — the chef is **not** asked to cook again. This is **deduplication**.
-- Once a dish has been sitting a while it is **stale**: it is still served instantly to keep customers happy, but the chef quietly starts cooking a fresh plate in the background.
+- The **cache** is the warming shelf at the pass. If a freshly cooked "Pasta" is already sitting on the shelf and is still warm (**fresh / within `staleTime`**), the next waiter who asks for "Pasta" gets it instantly — the chef is **not** asked to cook it again. This is **deduplication**.
+- Once a dish has been sitting for a while it is **stale**: it is still served instantly to keep customers happy, but the chef quietly starts cooking a fresh plate in the background.
 - If nobody has ordered "Pasta" for a long time (**`gcTime`**), the kitchen throws the cold plate away to free up shelf space (**garbage collection**).
 
 ---
 
 ## ⚡ 1. Why TanStack Query?
 
-The video first builds a fetcher the "manual" way to feel the pain. With plain React you must:
+The video first builds a fetcher the "manual" way so you can feel the pain. With plain React you must:
 
 * Create a `useState` for `data`, `isLoading`, and `error`.
 * Write a `useEffect` with a `try / catch / finally` block.
@@ -61,7 +61,7 @@ npm install @tanstack/react-query
 ```
 
 ### Wrapping the Application Root (`main.jsx`)
-To use the queries, you must instantiate a **`QueryClient`** and wrap your components in the **`QueryClientProvider`**:
+To use queries, you must instantiate a **`QueryClient`** and wrap your components in the **`QueryClientProvider`**:
 
 ```jsx
 import React from 'react';
@@ -132,7 +132,7 @@ export const UserDirectory = () => {
 
 ## 🔁 4. Automatic Request Deduplication
 
-**Deduplication** means that if multiple parts of your app request the **same data at the same time**, TanStack Query fires **only one** network request and shares the single result with all callers. It avoids asking for the same data over and over.
+**Deduplication** means that if multiple parts of your app request the **same data at the same time**, TanStack Query fires **only one** network request and shares that single result with all callers. It avoids asking for the same data over and over.
 
 The key insight from the lesson: the result is keyed by `queryKey`. If a value already exists in the cache for that exact key, the cache hands it back instead of running `queryFn` again.
 
@@ -199,13 +199,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 ```
 
 > [!NOTE]
-> The Devtools are **tree-shaken out of production builds** automatically, so leaving `<ReactQueryDevtools />` in your code is safe — it only appears during development. Hover any query to see whether it is currently `fresh` or `stale`.
+> The Devtools are **tree-shaken out of production builds** automatically, so leaving `<ReactQueryDevtools />` in your code is safe — it only appears during development. Hover over any query to see whether it is currently `fresh` or `stale`.
 
 ---
 
 ## 🚀 6. Core Caching Concepts: `staleTime` vs. `gcTime`
 
-Configuring caching behaviors is essential for managing network traffic:
+Configuring caching behavior is essential for managing network traffic:
 
 ```mermaid
 graph TD
@@ -219,12 +219,12 @@ graph TD
 ### A. `staleTime` (Freshness Threshold)
 * **What it is**: The time (in milliseconds) that query data is considered "fresh" after being fetched.
 * **Behavior**: While data is fresh, subsequent components requesting the same query key read from cache instantly **without triggering any background refetch requests**.
-* **Default**: `0` milliseconds (data is instantly considered stale).
+* **Default**: `0` milliseconds (data is considered stale immediately).
 * **Metaphor**: Like browsing a social app for 5 minutes — you keep seeing the data already cached on your device. To force *fresh* data you refresh the page.
 
 ### B. `gcTime` (Garbage Collection Time)
 * **What it is**: Formerly called `cacheTime`. The time (in milliseconds) that **unused** query data remains in cache memory before being deleted.
-* **Behavior**: When no components are subscribing to a query key, a timer starts. Once `gcTime` expires, the data is garbage collected from cache.
+* **Behavior**: When no components are subscribed to a query key, a timer starts. Once `gcTime` expires, the data is garbage collected from the cache.
 * **Default**: `300000` milliseconds (5 minutes).
 
 ### Custom Configuration Example:
@@ -237,13 +237,13 @@ const { data } = useQuery({
 });
 ```
 
-After `staleTime` elapses, hovering the query in the Devtools flips it from `fresh` to `stale` — your visual proof that the configuration works.
+After `staleTime` elapses, hovering over the query in the Devtools flips it from `fresh` to `stale` — your visual proof that the configuration works.
 
 ---
 
 ## ⏱️ 7. Polling with `refetchInterval`
 
-The **`refetchInterval`** option tells TanStack Query to automatically refetch the data on a fixed timer — known as **polling**. This keeps data fresh **without any user interaction**, which is ideal for dashboards, live scores, or notification counts.
+The **`refetchInterval`** option tells TanStack Query to automatically refetch the data on a fixed timer — a technique known as **polling**. This keeps data fresh **without any user interaction**, which is ideal for dashboards, live scores, or notification counts.
 
 ```jsx
 import { useQuery } from '@tanstack/react-query';
@@ -276,7 +276,7 @@ export const RefetchIntervalDemo = () => {
 With `refetchInterval: 5000`, the data re-fetches itself every 5 seconds — count *"1, 2, 3, 4, 5"* and the panel updates on its own, no button click required.
 
 > [!WARNING]
-> Polling sends a request on **every** interval tick for as long as the component is mounted. A short interval (e.g. `1000`) on many simultaneous queries can hammer your API and rack up costs. Use the longest interval your UX can tolerate, and consider `refetchIntervalInBackground: false` so polling pauses when the tab is hidden.
+> Polling sends a request on **every** interval tick for as long as the component is mounted. A short interval (e.g. `1000`) across many simultaneous queries can hammer your API and rack up costs. Use the longest interval your UX can tolerate, and consider `refetchIntervalInBackground: false` so polling pauses when the tab is hidden.
 
 ---
 
@@ -334,7 +334,7 @@ export const FetchFromMultipleEndpoints = () => {
 ```
 
 > [!TIP]
-> Use `useQueries` (not several separate `useQuery` calls) when the **number** of queries is dynamic — for example fetching details for an array of IDs whose length changes. It lets you build the `queries` array programmatically with `.map()`.
+> Use `useQueries` (instead of several separate `useQuery` calls) when the **number** of queries is dynamic — for example fetching details for an array of IDs whose length changes. It lets you build the `queries` array programmatically with `.map()`.
 
 ---
 
@@ -346,29 +346,29 @@ Answer these questions to check your understanding of TanStack Query. Click **Re
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Query Keys are arrays that act as unique identifiers for caching query results. If you include dynamic variables in a query key (e.g. `['todos', userId]`), the query key acts like a dependency array. When `userId` changes, TanStack Query automatically invalidates the old cache, creates a new cache key, and triggers a fresh data refetch.
+  Query Keys are arrays that act as unique identifiers for caching query results. If you include dynamic variables in a query key (e.g. `['todos', userId]`), the query key behaves like a dependency array. When `userId` changes, TanStack Query automatically invalidates the old cache, creates a new cache key, and triggers a fresh data refetch.
 </details>
 
 ### 2. What is "automatic request deduplication" and what drives it?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Deduplication means that when multiple components request the same data at the same time, TanStack Query fires **only one** network request and shares the single result with all of them. It is driven entirely by the **`queryKey`**: if a value already exists in the cache for that exact key, the cache returns it instead of running `queryFn` again. This is why two `<Deduplication />` components sharing `['randomNumber']` display the identical number.
+  Deduplication means that when multiple components request the same data at the same time, TanStack Query fires **only one** network request and shares that single result with all of them. It is driven entirely by the **`queryKey`**: if a value already exists in the cache for that exact key, the cache returns it instead of running `queryFn` again. This is why two `<Deduplication />` components sharing `['randomNumber']` display the identical number.
 </details>
 
 ### 3. What is the difference between `staleTime` and `gcTime`?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  - **`staleTime`** controls how long fetched data is considered **fresh**. While fresh, the same query key is served from cache with **no** background refetch. Default is `0` (instantly stale).
-  - **`gcTime`** (formerly `cacheTime`) controls how long **unused** data stays in memory once no component is subscribed, before garbage collection deletes it. Default is `300000` ms (5 minutes).
+  - **`staleTime`** controls how long fetched data is considered **fresh**. While fresh, the same query key is served from cache with **no** background refetch. The default is `0` (instantly stale).
+  - **`gcTime`** (formerly `cacheTime`) controls how long **unused** data stays in memory once no component is subscribed, before garbage collection deletes it. The default is `300000` ms (5 minutes).
 </details>
 
 ### 4. When would you use `refetchInterval`, and what is one risk of setting it too low?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  `refetchInterval` enables **polling** — automatically refetching data on a fixed timer (e.g. `refetchInterval: 5000` refetches every 5 seconds) without any user interaction. It is ideal for dashboards, live scores, or notification counts. The risk of a very low interval is that it sends a request on every tick for every mounted query, which can overload your API and increase cost. You can also set `refetchIntervalInBackground: false` so polling pauses when the tab is hidden.
+  `refetchInterval` enables **polling** — automatically refetching data on a fixed timer (e.g. `refetchInterval: 5000` refetches every 5 seconds) without any user interaction. It is ideal for dashboards, live scores, or notification counts. The risk of a very low interval is that it sends a request on every tick for every mounted query, which can overload your API and increase costs. You can also set `refetchIntervalInBackground: false` so polling pauses when the tab is hidden.
 </details>
 
 ### 5. What does `useQueries` do, and how does its return value differ from `useQuery`?
@@ -387,7 +387,7 @@ Apply what you learned in your project environment:
 ### 🛠️ Exercise 1: Dynamic Post Details Fetcher
 1. Create a component `PostViewer.tsx` (using the `.tsx` extension).
 2. Set up a state variable `postId` initialized to `1`.
-3. Write an async query function `fetchPost(id)` fetching `https://jsonplaceholder.typicode.com/posts/${id}`.
+3. Write an async query function `fetchPost(id)` that fetches `https://jsonplaceholder.typicode.com/posts/${id}`.
 4. Pass `['post', postId]` as the `queryKey` and `() => fetchPost(postId)` as the `queryFn` inside the `useQuery` options.
 5. Render the post title and body on screen, plus buttons "Next Post" / "Previous Post" that update `postId`.
 6. **Verify caching:** install and mount `<ReactQueryDevtools initialIsOpen={false} />`. Open the panel and watch a new query key (`['post', 1]`, `['post', 2]`, ...) appear each time you advance. Going **back** to a previously visited post should load it **instantly** from cache — confirm the Devtools show that key as already populated.
@@ -399,4 +399,4 @@ Apply what you learned in your project environment:
    - `['posts']` → `https://jsonplaceholder.typicode.com/posts`
 3. Destructure the returned array into `todosQuery` and `postsQuery`. Show a single combined "Loading..." while **either** is loading, and a combined error message if **either** fails.
 4. Add `refetchInterval: 10000` to the todos query so it **polls** every 10 seconds. Open the Devtools and watch the `['todos']` query flip to `fetching` on each tick.
-5. **Stretch goal:** add a `staleTime: 30000` to the posts query and observe in the Devtools that posts stay `fresh` for 30 seconds (no background refetch on remount) while todos keep polling — proving `staleTime`, `refetchInterval`, and `useQueries` working together.
+5. **Stretch goal:** add `staleTime: 30000` to the posts query and observe in the Devtools that posts stay `fresh` for 30 seconds (no background refetch on remount) while todos keep polling — proving `staleTime`, `refetchInterval`, and `useQueries` work together.

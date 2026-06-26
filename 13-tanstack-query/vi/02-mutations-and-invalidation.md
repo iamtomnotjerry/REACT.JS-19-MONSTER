@@ -43,7 +43,7 @@ Trong khi `useQuery` được thiết kế để lấy dữ liệu, thì **`useM
 
 ### Các điểm khác biệt chính:
 * `useQuery` chạy tự động khi component mount. `useMutation` thì **không**; bạn kích hoạt nó thủ công bằng cách gọi hàm `mutate(variables)`.
-* `useMutation` không yêu cầu query keys (mặc dù nó có thể tương tác với chúng trong các chu trình onSuccess).
+* `useMutation` không yêu cầu query key (mặc dù nó có thể tương tác với các key đã cache bên trong các callback như `onSuccess`).
 
 ```jsx
 import { useMutation } from '@tanstack/react-query';
@@ -92,9 +92,9 @@ export const AddTodoComponent = () => {
 
 ## ⚡ 2. Vô hiệu hóa Cache (`invalidateQueries`)
 
-Khi bạn thay đổi dữ liệu trên server, cache phía client của các query trở nên lỗi thời (stale). Để giữ cho UI luôn đồng bộ, bạn phải báo cho TanStack Query loại bỏ cache cũ và fetch dữ liệu mới.
+Khi bạn thay đổi dữ liệu trên server, cache phía client của các query trở nên lỗi thời (stale). Để giữ cho UI luôn đồng bộ, bạn báo cho TanStack Query đánh dấu cache cũ là đã lỗi thời và fetch dữ liệu mới.
 
-Chúng ta làm điều này bằng cách khởi tạo hook **`useQueryClient`** và gọi **`invalidateQueries`** bên trong callback `onSuccess` của mutation:
+Chúng ta làm điều này bằng cách lấy client từ hook **`useQueryClient`** và gọi **`invalidateQueries`** bên trong callback `onSuccess` của mutation:
 
 ```jsx
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -224,7 +224,7 @@ export const useAddTodo = () => {
 ```
 
 > [!TIP]
-> Luôn kết hợp một optimistic update với `cancelQueries` (trong `onMutate`) và `invalidateQueries` (trong `onSettled`). Việc hủy ngăn một refetch ngầm chậm chạp ghi đè lên giá trị lạc quan của bạn; lần invalidate cuối cùng đảm bảo cache cuối cùng sẽ khớp với nguồn sự thật trên server.
+> Luôn kết hợp một optimistic update với `cancelQueries` (trong `onMutate`) và `invalidateQueries` (trong `onSettled`). Việc hủy ngăn một refetch ngầm chậm chạp ghi đè lên giá trị lạc quan của bạn; lần invalidate cuối cùng đảm bảo cache rốt cuộc sẽ khớp với nguồn dữ liệu gốc trên server.
 
 ---
 
@@ -352,7 +352,7 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu của bạn 
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  `useMutation` được thiết kế cho các side effect ghi, cập nhật, hoặc xóa dữ liệu (chỉ nên xảy ra do các tương tác tường minh của người dùng như click một nút hoặc submit một form). Việc chạy chúng tự động khi mount sẽ gây ra các thao tác ghi trùng lặp và làm spam cơ sở dữ liệu. Thay vào đó, nó trả về một hàm `mutate` để bạn gọi theo nhu cầu (on-demand).
+  `useMutation` được thiết kế cho các side effect ghi, cập nhật, hoặc xóa dữ liệu — những thao tác chỉ nên xảy ra để phản hồi các tương tác tường minh của người dùng như click một nút hoặc submit một form. Việc tự động chạy một mutation khi mount sẽ gây ra các thao tác ghi trùng lặp và làm spam cơ sở dữ liệu. Thay vào đó, hook trả về một hàm `mutate` để bạn chủ động gọi khi cần (on-demand).
 </details>
 
 ### 2. `queryClient.invalidateQueries({ queryKey: ['todos'] })` làm gì ở bên dưới (under the hood)?
@@ -360,8 +360,8 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu của bạn 
   <summary><b>Reveal Answer</b></summary>
 
   Nó làm hai việc:
-  1. Đánh dấu mọi query đang hoạt động có key `['todos']` (và, theo tiền tố, các key bắt đầu bằng `'todos'`) là lỗi thời (stale).
-  2. Nếu các query đó hiện đang được render trên màn hình, nó ngay lập tức kích hoạt một refetch ngầm để tự động đồng bộ UI với cơ sở dữ liệu server backend.
+  1. Đánh dấu mọi query có key `['todos']` (và, theo tiền tố, mọi key bắt đầu bằng `'todos'`) là đã lỗi thời (stale).
+  2. Với những query hiện đang hoạt động (đang được render trên màn hình), nó ngay lập tức kích hoạt một refetch ngầm để đồng bộ UI với server backend.
 </details>
 
 ### 3. Trong một optimistic update, mục đích của giá trị trả về từ `onMutate` là gì, và nó được dùng ở đâu?
@@ -413,7 +413,7 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu của bạn 
    - Trả về `{ previousTodos }` làm context.
 4. Trong **`onError`**, khôi phục snapshot từ `context.previousTodos`.
 5. Trong **`onSettled`**, gọi `invalidateQueries({ queryKey: ['todos'] })`.
-6. **Xác minh rollback:** tạm thời làm cho `mutationFn` throw một error và xác nhận rằng checkbox đảo trạng thái một cách rõ ràng, sau đó bật trở lại.
+6. **Xác minh rollback:** tạm thời làm cho `mutationFn` throw một error và xác nhận rằng checkbox đảo trạng thái một cách rõ ràng, rồi bật ngược trở lại.
 
 ### 🛠️ Bài tập 3: Trình xem bài viết phân trang
 1. Tạo `PaginatedPosts.tsx` với một state `currentPage` (khởi tạo `1`).

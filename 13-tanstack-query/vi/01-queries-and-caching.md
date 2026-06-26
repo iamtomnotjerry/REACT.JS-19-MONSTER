@@ -14,7 +14,7 @@ TanStack Query coi **server state** là một thứ về cơ bản khác biệt 
 > TanStack Query là **framework agnostic** (độc lập với framework). Cùng một lõi core hỗ trợ các adapter cho React, Vue, Angular, Svelte, và Solid. Trong khóa học này chúng ta tập trung vào adapter cho React (`@tanstack/react-query`), phiên bản 5.
 
 > [!TIP]
-> TanStack Query **không** chỉ là một công cụ fetch dữ liệu. Bạn có thể fetch bằng `fetch`, `axios`, GraphQL, hay bất kỳ hàm nào trả về một promise. Giá trị thực sự của thư viện nằm ở việc **quản lý** dữ liệu đó sau khi nó về: caching nó, biết khi nào nó stale, và refetch nó một cách thông minh.
+> TanStack Query **không** chỉ là một công cụ fetch dữ liệu. Bạn có thể fetch bằng `fetch`, `axios`, GraphQL, hay bất kỳ hàm nào trả về một promise. Giá trị thực sự của thư viện nằm ở việc **quản lý** dữ liệu đó sau khi nó trở về: lưu vào cache, biết khi nào nó stale, và refetch một cách thông minh.
 
 ### 🍱 Một phép ẩn dụ thực tế: Căn bếp nhà hàng
 
@@ -23,14 +23,14 @@ Hãy hình dung `QueryClient` như một **căn bếp nhà hàng với một ô 
 - Một **`queryKey`** là tên ghi trên phiếu order của khách (ví dụ "Table 4: Pasta").
 - **`queryFn`** là người đầu bếp thực sự nấu món ăn.
 - **cache** là kệ giữ nóng tại ô chuyền món. Nếu một đĩa "Pasta" vừa nấu đã sẵn trên kệ và vẫn còn nóng (**fresh / trong khoảng `staleTime`**), người phục vụ tiếp theo hỏi "Pasta" sẽ nhận được ngay lập tức — đầu bếp **không** bị yêu cầu nấu lại. Đây là **deduplication** (khử trùng lặp).
-- Một khi đĩa ăn đã nằm đó một lúc thì nó trở nên **stale**: nó vẫn được phục vụ ngay lập tức để giữ khách hài lòng, nhưng đầu bếp âm thầm bắt đầu nấu một đĩa mới ở dưới nền.
+- Một khi đĩa ăn đã nằm đó một lúc thì nó trở nên **stale**: nó vẫn được phục vụ ngay lập tức để giữ khách hài lòng, nhưng đầu bếp âm thầm bắt đầu nấu một đĩa mới ở phía sau.
 - Nếu không ai gọi "Pasta" trong một thời gian dài (**`gcTime`**), căn bếp vứt bỏ đĩa nguội đi để giải phóng chỗ trên kệ (**garbage collection**).
 
 ---
 
 ## ⚡ 1. Tại sao chọn TanStack Query?
 
-Video trước tiên xây dựng một bộ fetcher theo cách "thủ công" để cảm nhận nỗi đau. Với React thuần, bạn phải:
+Video trước tiên xây dựng một bộ fetcher theo cách "thủ công" để bạn tự cảm nhận được sự vất vả của nó. Với React thuần, bạn phải:
 
 * Tạo một `useState` cho `data`, `isLoading`, và `error`.
 * Viết một `useEffect` với khối `try / catch / finally`.
@@ -89,7 +89,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 ## 🧩 3. Fetch dữ liệu với `useQuery`
 
 Để fetch dữ liệu, bạn dùng hook **`useQuery`**, hook này nhận vào một đối tượng options chứa:
-1. **`queryKey`**: Một mảng định danh duy nhất và cache query này.
+1. **`queryKey`**: Một mảng dùng để định danh duy nhất và cache query này.
 2. **`queryFn`**: Hàm bất đồng bộ (trả về một promise) thực hiện fetch dữ liệu.
 
 ```jsx
@@ -273,10 +273,10 @@ export const RefetchIntervalDemo = () => {
 };
 ```
 
-Với `refetchInterval: 5000`, dữ liệu tự re-fetch chính nó mỗi 5 giây — đếm *"1, 2, 3, 4, 5"* và bảng panel tự cập nhật, không cần bấm nút nào.
+Với `refetchInterval: 5000`, dữ liệu tự re-fetch mỗi 5 giây — bạn đếm *"1, 2, 3, 4, 5"* và bảng panel tự cập nhật, không cần bấm nút nào.
 
 > [!WARNING]
-> Polling gửi một request trên **mỗi** nhịp interval trong suốt thời gian component còn được mount. Một interval ngắn (ví dụ `1000`) trên nhiều query đồng thời có thể dội bom API của bạn và đội chi phí lên. Hãy dùng interval dài nhất mà UX của bạn có thể chấp nhận được, và cân nhắc `refetchIntervalInBackground: false` để polling tạm dừng khi tab bị ẩn.
+> Polling gửi một request trên **mỗi** nhịp interval trong suốt thời gian component còn được mount. Một interval ngắn (ví dụ `1000`) trên nhiều query đồng thời có thể gây quá tải cho API của bạn và đẩy chi phí lên cao. Hãy dùng interval dài nhất mà UX của bạn có thể chấp nhận được, và cân nhắc `refetchIntervalInBackground: false` để polling tạm dừng khi tab bị ẩn.
 
 ---
 
@@ -342,7 +342,7 @@ export const FetchFromMultipleEndpoints = () => {
 
 Trả lời các câu hỏi sau để kiểm tra mức độ hiểu của bạn về TanStack Query. Nhấp vào **Reveal Answer** để xác nhận.
 
-### 1. "Query Keys" là gì và tại sao chúng được đối xử giống như mảng dependency?
+### 1. "Query Keys" là gì và tại sao chúng được coi như mảng dependency?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
@@ -384,7 +384,7 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu của bạn 
 
 Áp dụng những gì bạn đã học vào môi trường dự án của mình:
 
-### 🛠️ Bài tập 1: Trình Tải chi tiết Bài viết theo ID động
+### 🛠️ Bài tập 1: Trình tải chi tiết bài viết theo ID động
 1. Tạo một component `PostViewer.tsx` (dùng đuôi `.tsx`).
 2. Thiết lập một biến state `postId` khởi tạo bằng `1`.
 3. Viết một hàm query bất đồng bộ `fetchPost(id)` fetch từ `https://jsonplaceholder.typicode.com/posts/${id}`.

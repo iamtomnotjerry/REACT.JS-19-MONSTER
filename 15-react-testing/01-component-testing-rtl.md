@@ -18,10 +18,10 @@ Think of it this way 👇
 > 🧠 **Real-world metaphor — The Restaurant Health Inspector.**
 > A bad inspector walks into the kitchen and interrogates the chef about which brand of pan they used and the exact temperature of the fridge motor. If the restaurant later swaps brands, the inspector panics — even though the food is still perfect. A **good** inspector sits at a table, orders the food, and checks: *Does it arrive? Does it taste right? Is it safe?* That is exactly what RTL does. It does not care **how** your component stores state internally; it only cares that when a user **clicks "Increment"**, they **see the number go up**. Refactor your internals all you want — the test only breaks if the *user-visible behavior* breaks.
 
-This is why RTL gives you so much confidence: your tests survive refactors and only fail when something a real human would notice is actually broken.
+This is why RTL gives you so much confidence: your tests survive refactors and fail only when something a real human would notice is actually broken.
 
 > [!NOTE]
-> RTL does **not** render your component to a real screen. It mounts it into a **virtual DOM** (provided by `jsdom`) that lives entirely in Node.js memory. There are no pixels — just a queryable tree of DOM nodes, exactly like a browser would build.
+> RTL does **not** render your component to a real screen. It mounts it into a **virtual DOM** (provided by `jsdom`) that lives entirely in Node.js memory. There are no pixels — just a queryable tree of DOM nodes, exactly like the one a browser would build.
 
 > [!TIP]
 > RTL has a strict priority order for **how** you should query elements. Prefer queries that real users and assistive technology rely on: **role → label → text → test-id** (last resort). If you find yourself reaching for `getByTestId` first, your markup is probably not accessible enough.
@@ -86,7 +86,7 @@ import '@testing-library/jest-dom'; // Adds matchers like toBeInTheDocument(), t
 ```
 
 > [!NOTE]
-> With `globals: true`, you no longer import `describe`, `it`, and `expect` in every test file — they are available globally, just like Jest. This keeps test files lean across dozens of components.
+> With `globals: true`, you no longer need to import `describe`, `it`, and `expect` in every test file — they are available globally, just like in Jest. This keeps test files lean across dozens of components.
 
 ---
 
@@ -149,7 +149,7 @@ describe('SimpleCounter Component', () => {
 
 The two stars of every test are:
 * **`render(<Component />)`** — mounts the component into the virtual DOM.
-* **`screen`** — your handle to *query* that virtual DOM, exactly like a user scanning the page.
+* **`screen`** — your handle for *querying* that virtual DOM, exactly like a user scanning the page.
 
 ---
 
@@ -168,7 +168,7 @@ There is a simple mental formula. Pick the variant by asking: *"Is the element d
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **`getBy...`** | a single element | **throws** error | **throws** error | sync | the element **must** already be on screen. |
 | **`queryBy...`** | a single element **or `null`** | returns `null` (no error) | **throws** error | sync | you want to assert an element is **absent**. |
-| **`findBy...`** | a **Promise** of one element | rejects after timeout | rejects | **async** | the element appears **later** (after fetch, timer, interaction). |
+| **`findBy...`** | a **Promise** of one element | rejects after timeout | rejects | **async** | the element appears **later** (after a fetch, timer, or interaction). |
 | **`getAllBy...`** | an **array** | **throws** error | returns all | sync | several matching elements **must** exist. |
 | **`queryAllBy...`** | an **array** (may be **empty `[]`**) | returns `[]` (no error) | returns all | sync | zero-or-more elements; safe to check `.length === 0`. |
 | **`findAllBy...`** | a **Promise** of an array | rejects after timeout | resolves with all | **async** | several elements appear **later**. |
@@ -205,7 +205,7 @@ expect(results).toHaveLength(5);
 
 ### 4b. The "By What?" Reference Table
 
-The suffix decides **which attribute** is matched. Listed in RTL's recommended priority order:
+The suffix decides **which attribute** is matched. These are listed in RTL's recommended priority order:
 
 | Query suffix | Matches on | Example | Typical element |
 | :--- | :--- | :--- | :--- |
@@ -253,7 +253,7 @@ const cancelBtn = screen.getByRole('button', { name: /cancel/i });
 
 ## 🖱️ 5. `userEvent` vs `fireEvent` — Simulating a Real Human
 
-There are two ways to trigger interactions. Understanding the difference is critical.
+There are two ways to trigger interactions, and understanding the difference is critical.
 
 | | `fireEvent` | `@testing-library/user-event` |
 | :--- | :--- | :--- |
@@ -265,7 +265,7 @@ There are two ways to trigger interactions. Understanding the difference is crit
 
 ### Setting up `userEvent`
 
-The modern API requires calling `userEvent.setup()` **once** at the start of each test (before `render`), which returns a `user` object you then drive:
+The modern API requires calling `userEvent.setup()` **once** at the start of each test (before `render`); it returns a `user` object that you then drive:
 
 ```tsx
 import userEvent from '@testing-library/user-event';
@@ -331,7 +331,7 @@ describe('FindAllByQueries Component', () => {
 ```
 
 > [!NOTE]
-> RTL automatically calls `cleanup()` after each test when Vitest `globals` are enabled, so the explicit `afterEach(cleanup)` above is usually optional. It's shown here so you understand *what is happening* — each test starts from a fresh, isolated DOM with no leftover nodes from the previous test.
+> RTL automatically calls `cleanup()` after each test when Vitest `globals` are enabled, so the explicit `afterEach(cleanup)` above is usually optional. It's shown here so you understand *what is happening*: each test starts from a fresh, isolated DOM with no leftover nodes from the previous test.
 
 ---
 
@@ -494,7 +494,7 @@ Answer these questions to check your understanding of component testing. Click *
 
   - **`getBy...`** — synchronous; returns the element, but **throws an error** if it's missing. Use when the element must already exist.
   - **`queryBy...`** — synchronous; returns the element or **`null`** (never throws). Use to assert an element is **absent**: `expect(screen.queryByText(/error/i)).toBeNull()`.
-  - **`findBy...`** — **asynchronous**; returns a **Promise** that resolves when the element appears, or rejects after a timeout. Use (with `await`) for content that loads later — API responses, timers, post-interaction renders.
+  - **`findBy...`** — **asynchronous**; returns a **Promise** that resolves when the element appears, or rejects after a timeout. Use it (with `await`) for content that loads later — API responses, timers, post-interaction renders.
 
   The `All` variants (`getAllBy`, `queryAllBy`, `findAllBy`) return **arrays** instead of single elements; `queryAllBy` returns an **empty array `[]`** when nothing matches.
 </details>
@@ -510,7 +510,7 @@ Answer these questions to check your understanding of component testing. Click *
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  `beforeEach` runs a setup function **before every individual test** in a `describe` block — commonly `render(<Component />)` and `userEvent.setup()` — so each test starts from an identical, fresh arrangement without repeating boilerplate. RTL keeps tests **isolated** by calling `cleanup()` after each test (automatic when Vitest `globals` are enabled), unmounting the component and wiping the virtual DOM. This guarantees one test can never leak rendered nodes or state into the next, eliminating order-dependent, hard-to-debug failures.
+  `beforeEach` runs a setup function **before every individual test** in a `describe` block — commonly `render(<Component />)` and `userEvent.setup()` — so each test starts from an identical, fresh arrangement without repeating boilerplate. RTL keeps tests **isolated** by calling `cleanup()` after each test (automatic when Vitest `globals` are enabled), unmounting the component and wiping the virtual DOM. This guarantees that one test can never leak rendered nodes or state into the next, eliminating order-dependent, hard-to-debug failures.
 </details>
 
 ---

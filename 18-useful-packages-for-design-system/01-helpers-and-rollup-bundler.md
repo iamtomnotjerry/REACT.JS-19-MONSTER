@@ -1,6 +1,6 @@
 # Design System Toolkit: Tokens, Helpers & Rollup Bundler 🛠️
 
-When building a production-ready **React Design System**, writing components is only half the battle. A great design system depends on a small set of specialized tools that work together to keep styling **consistent**, **flexible**, and **distributable**. In this lesson we walk through the four tools the instructor teaches, in order:
+When building a production-ready **React Design System**, writing components is only half the battle. A great design system also depends on a small set of specialized tools that work together to keep styling **consistent**, **flexible**, and **distributable**. In this lesson we walk through the four tools the instructor teaches, in order:
 
 1. **Style Dictionary** — define design tokens once in JSON, then transform them into CSS, SCSS, and JavaScript outputs.
 2. **clsx** — conditionally join class names without fragile string concatenation.
@@ -30,11 +30,11 @@ Here is how the pieces fit together in the authoring-to-distribution pipeline:
 
 A **design token** is the smallest, named decision in a design system: a color, a spacing step, a font size, a font weight. Instead of scattering `#7c3aed` across 40 files, you name it once (`color.violet`) and reference the name everywhere.
 
-**Style Dictionary** is a build system that lets designers and developers **define, organize, and manage design tokens in JSON**, then transform those tokens into many output formats — CSS variables, SCSS variables, JavaScript objects, and even Android/iOS formats.
+**Style Dictionary** is a build system that lets designers and developers **define, organize, and manage design tokens in JSON**, then transform those tokens into many output formats — CSS variables, SCSS variables, JavaScript objects, and even Android and iOS formats.
 
 ### Why it matters
 
-- **Centralized management** — tokens live in a single source of truth (JSON), easy to maintain and update.
+- **Centralized management** — tokens live in a single source of truth (JSON) that is easy to maintain and update.
 - **Cross-platform** — one definition outputs CSS, SCSS, JS, and native formats.
 - **Extensibility** — you can customize how tokens are processed (calculated values, custom transforms).
 - **Automation** — transforming tokens into usable code becomes a single build command.
@@ -170,7 +170,7 @@ After running, the `build/` folder contains all three formats generated from the
 
 ## 🔗 2. clsx — Conditional Class Joining
 
-`clsx` is a tiny utility for **conditionally joining class names**. It lets you add or remove CSS classes based on a condition without manual string concatenation or messy ternary soup.
+`clsx` is a tiny utility for **conditionally joining class names**. It lets you add or remove CSS classes based on a condition without resorting to manual string concatenation or messy ternary soup.
 
 ### Install
 
@@ -212,7 +212,7 @@ clsx({
 
 ### The industry-standard `cn` helper
 
-In real component libraries (popularized by `shadcn/ui`), `clsx` is combined with **`tailwind-merge`** to both join *and* de-conflict Tailwind classes:
+In real component libraries (a pattern popularized by `shadcn/ui`), `clsx` is combined with **`tailwind-merge`** to both join *and* de-conflict Tailwind classes:
 
 ```bash
 npm install clsx tailwind-merge
@@ -248,7 +248,7 @@ cn('px-4 py-2 bg-red-500', 'px-6 bg-orange-600');
 
 ## 🧬 3. CVA — Type-Safe Component Variants
 
-**CVA** (`class-variance-authority`) is a utility that manages and applies conditional class names in a **structured, reusable, type-safe** way. It pairs beautifully with utility-first frameworks like Tailwind CSS, letting you define class variations based on component props or states while keeping styling consistent.
+**CVA** (`class-variance-authority`) is a utility that manages and applies conditional class names in a **structured, reusable, type-safe** way. It pairs beautifully with utility-first frameworks like Tailwind CSS, letting you define class variations based on component props or state while keeping styling consistent.
 
 ### Install
 
@@ -258,7 +258,7 @@ npm install class-variance-authority
 
 ### Define variants
 
-You call `cva(baseClasses, config)`. The first argument is the always-applied base; `config.variants` describes each axis of variation; `defaultVariants` fills in anything the consumer omits.
+You call `cva(baseClasses, config)`. The first argument is the always-applied base; `config.variants` describes each axis of variation; and `defaultVariants` fills in anything the consumer omits.
 
 ```tsx
 // src/components/button-styles.ts
@@ -331,7 +331,7 @@ export const Button = ({ color, size, state, children }: ButtonProps) => {
 ```
 
 > [!TIP]
-> Because the variant keys are typed, your editor autocompletes `color="primary" | "secondary"` and flags typos at compile time. Combine CVA with the `cn` helper to let consumers still pass an extra `className` that overrides the variant output.
+> Because the variant keys are typed, your editor autocompletes `color="primary" | "secondary"` and flags typos at compile time. Combine CVA with the `cn` helper so consumers can still pass an extra `className` that overrides the variant output.
 
 ---
 
@@ -403,7 +403,7 @@ export default [
 ```
 
 > [!WARNING]
-> Failing to use `rollup-plugin-peer-deps-external` can cause your bundle to include duplicate copies of React. When a consumer imports your library, React will throw a "rules of hooks" violation error due to multiple React instances running in the same app.
+> Failing to use `rollup-plugin-peer-deps-external` can cause your bundle to include a duplicate copy of React. When a consumer then imports your library, React will throw a "rules of hooks" violation error because multiple React instances are running in the same app.
 
 ### Step 3: Configure `package.json`
 
@@ -449,7 +449,7 @@ Answer these questions to check your understanding. Click **Reveal Answer** to v
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  `clsx` only concatenates string/array/object arguments conditionally. It does not understand Tailwind utility syntax, so `clsx('px-4', 'px-6')` outputs `"px-4 px-6"`. `tailwind-merge` understands Tailwind-specific properties and overrides `px-4` in favor of `px-6` because they target the same CSS property (horizontal padding), ensuring the last class wins.
+  `clsx` only concatenates string, array, and object arguments conditionally. It does not understand Tailwind utility syntax, so `clsx('px-4', 'px-6')` outputs `"px-4 px-6"`. `tailwind-merge` understands Tailwind-specific properties and overrides `px-4` in favor of `px-6` because they target the same CSS property (horizontal padding), ensuring the last class wins.
 </details>
 
 ### 3. In CVA, what is the purpose of `defaultVariants`?
@@ -463,7 +463,7 @@ Answer these questions to check your understanding. Click **Reveal Answer** to v
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Listing React under `dependencies` forces npm to install a dedicated instance of React inside the library's `node_modules`. This results in two active React instances in the consumer's app, which breaks the rules of hooks. By placing React in `peerDependencies`, you require the host application to provide React, avoiding version mismatches and duplicate-instance errors.
+  Listing React under `dependencies` forces npm to install a dedicated copy of React inside the library's `node_modules`. This can result in two active React instances in the consumer's app, which breaks the rules of hooks. By placing React in `peerDependencies`, you require the host application to provide React, avoiding version mismatches and duplicate-instance errors.
 </details>
 
 ### 5. What is the difference between Rollup's ESM and CJS output formats, and why ship both?

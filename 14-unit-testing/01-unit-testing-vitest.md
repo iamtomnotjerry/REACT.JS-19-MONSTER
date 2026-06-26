@@ -1,12 +1,12 @@
 # Unit Testing with Vitest 🧪
 
-**Unit Testing** is the practice of testing individual pieces of code (functions, utility classes, algorithms) in isolation to ensure they behave exactly as expected. In modern React ecosystems, **Vitest** is the preferred, next-generation testing framework because it is extremely fast, configures instantly with Vite, and supports Jest-compatible assertion syntax.
+**Unit Testing** is the practice of testing individual pieces of code (functions, utility classes, algorithms) in isolation to ensure they behave exactly as expected. In the modern React ecosystem, **Vitest** is the preferred, next-generation testing framework because it is extremely fast, configures instantly with Vite, and supports Jest-compatible assertion syntax.
 
 ---
 
 ## 🌐 Concept & Overview
 
-Before we write a single test, let's understand *where* unit testing fits. There are three flavors of automated testing, and they form a pyramid from cheapest/fastest at the bottom to most expensive/slowest at the top:
+Before we write a single test, let's understand *where* unit testing fits. There are three flavors of automated testing, and they form a pyramid that runs from cheapest/fastest at the bottom to most expensive/slowest at the top:
 
 | Test Type | What It Checks | Scope | Speed |
 | :--- | :--- | :--- | :--- |
@@ -20,7 +20,7 @@ This lesson focuses entirely on **unit testing** — verifying that small, isola
 > **Why Vitest over Jest, Mocha, or Cypress?** Vitest is the fastest of the popular runners, and it natively supports **ESM**, **TypeScript**, and **JSX** out of the box. Other frameworks support ESM only experimentally and may need extra config for TypeScript/JSX. Because Vitest shares Vite's config, you reuse the *same* loaders and bundler your app already uses — no duplicate Babel setup.
 
 > [!TIP]
-> Write tests in **plain JavaScript** while you are *learning* unit testing. TypeScript's type system already eliminates many invalid-input bugs at compile time, which hides the edge cases (like passing a string where a number is expected) that make unit testing interesting. Once you move into React components, switch to `.tsx`.
+> Write tests in **plain JavaScript** while you are *learning* unit testing. TypeScript's type system already eliminates many invalid-input bugs at compile time, which hides the very edge cases (like passing a string where a number is expected) that make unit testing interesting. Once you move on to React components, switch to `.tsx`.
 
 > [!WARNING]
 > Unit tests should never depend on a real network, database, or filesystem. The moment a "unit" test reaches out to an external service, it becomes a slow, flaky *integration* test. Keep units pure and isolated — mock external dependencies when needed.
@@ -36,7 +36,7 @@ npm install -D vitest
 ```
 
 ### Adding Scripts to `package.json`
-Add a command script to launch the Vitest runner in watch mode, plus an optional UI dashboard:
+Add a script to launch the Vitest runner in watch mode, plus an optional UI dashboard:
 ```json
 "scripts": {
   "test": "vitest",
@@ -47,13 +47,13 @@ Add a command script to launch the Vitest runner in watch mode, plus an optional
 The `test:ui` script opens a browser dashboard where you can filter by passing, failing, or skipped tests and inspect each test's code and console output. The plain `test` script runs the same suite directly in your terminal.
 
 > [!NOTE]
-> Running `npm run test:ui` the first time will prompt you to install the `@vitest/ui` dependency — accept it. This package is only available with Vitest; runners like Jest or Mocha do not ship it.
+> The first time you run `npm run test:ui`, it will prompt you to install the `@vitest/ui` dependency — accept it. This package is specific to Vitest; runners like Jest or Mocha do not ship it.
 
 ---
 
 ## 🧩 2. Writing Your First Unit Test
 
-A test file is typically named with a `.test.js` or `.test.ts` extension. The `.test` segment tells the runner this file is a test suite. We organize tests using three main blocks:
+A test file is typically named with a `.test.js` or `.test.ts` extension. The `.test` segment tells the runner that this file is a test suite. We organize tests using three main blocks:
 1. **`describe`**: Groups related tests together into a named test suite (optional, but recommended for readability).
 2. **`it`** (or **`test`**): Defines an individual test case. `it` and `test` are interchangeable — they work identically.
 3. **`expect`**: Asserts that the received value matches the expected outcome. An **assertion** is a statement that checks whether a value meets a condition (equality, truthiness, etc.).
@@ -164,7 +164,7 @@ test('adds numbers correctly', () => {
 ```
 
 > [!NOTE]
-> AAA is a *convention*, not a syntax rule. The runner does not enforce it. But separating the three phases visually (often with blank lines or comments) makes tests dramatically easier to read and debug.
+> AAA is a *convention*, not a syntax rule — the runner does not enforce it. But separating the three phases visually (often with blank lines or comments) makes tests dramatically easier to read and debug.
 
 ---
 
@@ -296,7 +296,7 @@ A robust suite tests three categories of input, not just the happy path:
 | :--- | :--- | :--- |
 | **Positive** | The system behaves correctly with **valid** inputs | `add(3, 5)` returns `8` |
 | **Negative** | The system rejects **invalid** inputs gracefully (throws, doesn't crash) | `add('3', 5)` throws "Both inputs must be numbers" |
-| **Boundary** | The system handles the **edges** of valid ranges, where bugs hide most | A password validator at exactly 8 and exactly 16 characters |
+| **Boundary** | The system handles the **edges** of valid ranges, where bugs hide most often | A password validator at exactly 8 and exactly 16 characters |
 
 ```javascript
 // Source: src/math.js
@@ -387,7 +387,7 @@ Answer these questions to check your understanding of unit testing. Click **Reve
 
   - **`toBe()`** uses strict referential equality (`Object.is`, like `===`). Use it for primitives (numbers, strings, booleans).
   - **`toEqual()`** does a **deep** comparison of object/array contents, ignoring whether the references point to the same memory.
-  - **`toStrictEqual()`** is like `toEqual()` but *stricter*: it also checks property types, distinguishes `undefined` properties, sparse arrays, and class instances. Two objects that pass `toEqual` can still fail `toStrictEqual`.
+  - **`toStrictEqual()`** is like `toEqual()` but *stricter*: it also checks property types and distinguishes `undefined` properties, sparse arrays, and class instances. Two objects that pass `toEqual` can still fail `toStrictEqual`.
 </details>
 
 ### 3. Explain the AAA pattern and why we wrap throwing code in an arrow function for `toThrow()`.
@@ -407,7 +407,7 @@ Answer these questions to check your understanding of unit testing. Click **Reve
   2. **🟢 Green** — write the *minimum* code needed to make the test pass.
   3. **🔵 Refactor** — clean up or optimize the code while keeping the test green.
 
-  Then repeat. The key discipline is that the test must genuinely fail first — if it passes before you write code, the test is flawed.
+  Then repeat. The key discipline is that the test must genuinely fail first — if it passes before you write any code, the test is flawed.
 </details>
 
 ### 5. What is the difference between positive, negative, and boundary testing?
@@ -459,13 +459,13 @@ Test real string and array transformation functions using the full matcher set.
    - `sum([1, 2, 3])` **`toBe`** `6` (positive) and `sum([-1, -2, -3])` **`toBe`** `-6` (negative values).
    - `findMax([10, 5, 100])` **`toBe`** `100`.
    - `removeDuplicates([1, 2, 2, 3, 4, 4])` **`toEqual`** `[1, 2, 3, 4]`.
-   - Use **`toContain`** to assert a result array includes a specific element.
+   - Use **`toContain`** to assert that a result array includes a specific element.
 4. Launch `npm run test` (or `npm run test:ui` for the dashboard) and verify every suite is green.
 
 ### 🛠️ Exercise 3 (Bonus): Cart Calculations
 
 1. Create `src/cartUtils.js` and export:
-   - `calculateItemTotal(price, qty = 1)`: returns total cost; default quantity of `1` if omitted.
+   - `calculateItemTotal(price, qty = 1)`: returns total cost; defaults the quantity to `1` if omitted.
    - `formatCurrency(amount)`: returns a formatted string like `"$100.00"`.
 2. In `src/cartUtils.test.js`, verify that:
    - `calculateItemTotal` works for standard quantities, applies the default of `1`, and handles negative parameters (boundary/negative).

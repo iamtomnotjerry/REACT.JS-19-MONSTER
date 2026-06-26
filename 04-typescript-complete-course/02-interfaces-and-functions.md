@@ -6,7 +6,7 @@ This lesson covers how to define custom object structures, handle flexible value
 
 ## 📖 Concept & Overview
 
-In TypeScript, the two most important tools for describing the *shape* of your data are **interfaces** and **type aliases**. They look almost identical at first glance, but each one has superpowers the other lacks. Once you understand object shapes, you can apply the same rigor to your **functions**: typing parameters, optional arguments, default values, return formats, and even the callbacks you pass around.
+In TypeScript, the two most important tools for describing the *shape* of your data are **interfaces** and **type aliases**. They look almost identical at first glance, but each one has powers the other lacks. Once you understand object shapes, you can apply the same rigor to your **functions**: typing parameters, optional arguments, default values, return types, and even the callbacks you pass around.
 
 A key mental model that makes TypeScript "click" is **structural typing** (sometimes nicknamed "duck typing"): TypeScript does not care what you *named* a type — it cares about the *structure* (the set of properties and their types). If an object has the right shape, it fits, regardless of where it came from.
 
@@ -25,7 +25,7 @@ A key mental model that makes TypeScript "click" is **structural typing** (somet
 
 Think of an **interface** as a **job description** posted by a company.
 
-The job description lists the responsibilities (the properties and methods) a candidate **must** be able to fulfill. The company does not care *which school* you graduated from or *what your previous job title was* — only that you can do everything on the list. This is exactly how **structural typing** works: TypeScript checks whether your object can "do the job" described by the interface, not whether you explicitly labeled it as that type.
+The job description lists the responsibilities (the properties and methods) a candidate **must** be able to fulfill. The company does not care *which school* you graduated from or *what your previous job title was* — only that you can do everything on the list. This is exactly how **structural typing** works: TypeScript checks whether your object can "do the job" described by the interface, not whether you explicitly labeled the object as that type.
 
 - An **optional property (`?`)** is like a *nice-to-have* skill: "Knowledge of French is a plus." You can take the job with or without it.
 - A **`readonly` property** is like your *employee ID*: it is assigned once on your first day and can never be changed afterward.
@@ -50,7 +50,7 @@ The job description lists the responsibilities (the properties and methods) a ca
 
 ## ⚡ 1. Interfaces vs. Type Aliases
 
-Both interfaces and type aliases allow you to define object structures. However, they are designed for different use cases.
+Both interfaces and type aliases let you define object structures. However, they are designed for different use cases.
 
 ### A. Interfaces (Objects & Extensibility)
 Interfaces are standard blueprints for objects. They support **inheritance** (extending interfaces) and **declaration merging**:
@@ -79,12 +79,12 @@ const developer: Employee = {
 ```
 
 > [!NOTE]
-> **Declaration Merging**: If you declare two interfaces with the exact same name in the same scope, TypeScript automatically merges their properties together. Type aliases cannot do this.
+> **Declaration Merging**: If you declare two interfaces with the exact same name in the same scope, TypeScript automatically merges their properties into one. Type aliases cannot do this.
 
 ---
 
 ### B. Type Aliases (Flexibility & Unions)
-Type Aliases are naming shortcuts for *any* type shape, including primitives, unions, and tuples:
+Type aliases are naming shortcuts for *any* type shape, including primitives, unions, and tuples:
 
 ```typescript
 // 1. Primitive Aliasing
@@ -128,7 +128,7 @@ const robot = { id: 7 };
 ```
 
 > [!TIP]
-> Extra properties are fine when assigning from a *variable* (like `pet` above), because the object still satisfies the contract. However, an **object literal** assigned *directly* triggers "excess property checks" and will error on unknown properties — a deliberate safety net to catch typos.
+> Extra properties are fine when assigning from a *variable* (like `pet` above), because the object still satisfies the contract. However, an **object literal** assigned *directly* triggers "excess property checks" and will error on unknown properties — a deliberate safety net for catching typos.
 
 ---
 
@@ -166,7 +166,7 @@ console.log(userA.age); // undefined (no error — the property is optional)
 
 ### B. The `readonly` Modifier
 
-`readonly` lets you *read* a property but forbids *reassigning* it after the object is created. It is perfect for IDs, configuration constants, and any value that should never change.
+`readonly` lets you *read* a property but forbids *reassigning* it after the object is created. It is ideal for IDs, configuration constants, and any value that should never change.
 
 ```typescript
 type Account = {
@@ -228,7 +228,7 @@ const customer: Person = {
 
 ## ⚡ 5. Method Signatures Inside Interfaces
 
-Interfaces are **not limited to plain data** — they can also describe **methods** that an object must implement. This is how you express "any object of this shape must be able to *do* something."
+Interfaces are **not limited to plain data** — they can also describe **methods** that an object must implement. This is how you express the idea that "any object of this shape must be able to *do* something."
 
 ```typescript
 // An interface describing a song that can describe ITSELF.
@@ -281,7 +281,7 @@ greet({
 ```
 
 > [!NOTE]
-> Interfaces with method signatures pair beautifully with classes via `implements`. A `class Car implements Vehicle { ... }` is forced by the compiler to define every method (e.g. `start()`, `stop()`) declared on the `Vehicle` interface.
+> Interfaces with method signatures pair beautifully with classes via `implements`. A `class Car implements Vehicle { ... }` is forced by the compiler to define every method (e.g. `start()` and `stop()`) declared on the `Vehicle` interface.
 
 ---
 
@@ -320,13 +320,13 @@ type Gadget = { name: string };
 ```
 
 > [!TIP]
-> Declaration merging is heavily used by library authors to *augment* existing types (e.g. adding properties to the global `Window` interface or to a third-party module's types) without modifying the original source.
+> Declaration merging is widely used by library authors to *augment* existing types (e.g. adding properties to the global `Window` interface or to a third-party module's types) without modifying the original source.
 
 ---
 
 ## ⚡ 7. Typing Functions
 
-In TypeScript, you can strictly type function parameters, optional arguments, default values, and return formats.
+In TypeScript, you can strictly type function parameters, optional arguments, default values, and return types.
 
 ```typescript
 // 1. Named function with explicit return type
@@ -366,7 +366,7 @@ Answer these questions to check your understanding of objects, interfaces, and f
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Declaration Merging occurs when the TypeScript compiler merges two or more independent declarations sharing the same name into a single combined definition. Only **Interfaces** support declaration merging — reopening an interface adds its new members to the existing one. Declaring two **Type Aliases** with the same name instead causes a compile-time `Duplicate identifier` error.
+  Declaration Merging occurs when the TypeScript compiler merges two or more independent declarations that share the same name into a single combined definition. Only **Interfaces** support declaration merging — reopening an interface adds its new members to the existing one. Declaring two **Type Aliases** with the same name instead causes a compile-time `Duplicate identifier` error.
 </details>
 
 ### 2. What does the `readonly` modifier do, and how does it differ from an optional (`?`) property?
@@ -413,7 +413,7 @@ Apply what you learned in your project environment.
    - `category`: optional string.
 3. **Reopen** the `Product` interface (declaration merging) in the same file and add a `readonly sku: string` property. Confirm that new `Product` objects are now forced to include `sku`.
 4. Define a type alias `Cart` which is an array of `Product` objects.
-5. Write a function `checkout` that accepts a `Cart` and an *optional* discount code (string), returning the total checkout price (number):
+5. Write a function `checkout` that accepts a `Cart` and an *optional* discount code (string) and returns the total checkout price (number):
    - If the discount code `"SAVE10"` is passed, subtract `10` from the total price.
 6. Create a mock cart array, pass it to the function, and run compile checks (`tsc functions.ts`) to verify type correctness.
 7. **Bonus:** Try reassigning `product.id` after creation and confirm the compiler rejects it because of `readonly`.

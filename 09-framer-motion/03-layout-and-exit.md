@@ -1,12 +1,12 @@
 # Layout & Exit Animations in Framer Motion ✨
 
-In standard React, elements are immediately added or removed from the DOM during conditional rendering, making it impossible to animate their departure. This lesson covers **`AnimatePresence`** (unmounting animations), the **`layout`** prop (animating layout shifts), and **`layoutId`** (shared layout animations between components). It then goes a level deeper into the **motion-value hooks** that power scroll-driven and drag-driven animations: **`useMotionValue`**, **`useTransform`**, **`useScroll`**, and **`useSpring`**.
+In standard React, elements are added to or removed from the DOM immediately during conditional rendering, making it impossible to animate their departure. This lesson covers **`AnimatePresence`** (unmounting animations), the **`layout`** prop (animating layout shifts), and **`layoutId`** (shared layout animations between components). It then goes a level deeper into the **motion-value hooks** that power scroll-driven and drag-driven animations: **`useMotionValue`**, **`useTransform`**, **`useScroll`**, and **`useSpring`**.
 
 ---
 
 ## 📚 Concept & Overview
 
-Animation is not just decoration — it communicates *change* to the user. When a notification appears, a modal closes, or a list reorders itself, a smooth transition tells the human eye *what happened and where it went*. Framer Motion gives us two distinct toolsets for this:
+Animation is not just decoration — it communicates *change* to the user. When a notification appears, a modal closes, or a list reorders itself, a smooth transition tells the human eye *what happened and where things went*. Framer Motion gives us two distinct toolsets for this:
 
 1. **Presence & layout animations** — declarative props (`exit`, `layout`, `layoutId`) that animate components as they mount, unmount, or reflow.
 2. **Motion values** — reactive primitives (`useMotionValue`, `useTransform`, `useScroll`, `useSpring`) that let us *programmatically* drive animation from continuous inputs such as scroll position or drag distance.
@@ -72,7 +72,7 @@ const styles = { alert: { padding: "15px", backgroundColor: "#e74c3c", color: "#
 
 ## ⚡ 2. Animating Layout Reflows (`layout`)
 
-When lists change size or elements shift position, they normally "jump" instantly to their new locations, creating an unnatural layout shift. 
+When lists change size or elements shift position, they normally "jump" instantly to their new locations, creating an abrupt, unnatural layout shift.
 
 Adding the **`layout`** prop to a `<motion>` component instructs Framer Motion to automatically animate size or position changes using highly performant CSS transforms:
 
@@ -142,7 +142,7 @@ The `layout` prop solves this with a well-known trick called **FLIP** — **F**i
 
 ## ⚡ 3. Shared Layouts (`layoutId`)
 
-You can animate transitions between completely separate components using the **`layoutId`** prop. When a component with a specific `layoutId` mounts while another with the same ID is unmounting, Framer Motion performs a smooth visual transition between them.
+You can animate transitions between completely separate components using the **`layoutId`** prop. When a component with a specific `layoutId` mounts while another with the same `layoutId` is unmounting, Framer Motion performs a smooth visual transition between the two.
 
 A common example is an active indicator line sliding between navigation tab buttons:
 
@@ -223,7 +223,7 @@ export const DragTracker = () => {
 
 ### `useTransform` — Map one range to another
 
-`useTransform` takes a source motion value and maps an **input range** to an **output range**. The output can be numbers, colors, or units — making it perfect for deriving one animated property from another. Here we turn horizontal drag distance into a color shift:
+`useTransform` takes a source motion value and maps an **input range** onto an **output range**. The output can be numbers, colors, or values with units — which makes it perfect for deriving one animated property from another. Here we turn horizontal drag distance into a color shift:
 
 ```jsx
 import { motion, useMotionValue, useTransform } from 'framer-motion';
@@ -315,7 +315,7 @@ export const ScrollProgress = () => {
 
 ### `useSpring` — Add natural, physics-based smoothing
 
-The raw value from `useMotionValue` or `useScroll` snaps to its target with no easing, which can feel mechanical. **`useSpring`** wraps a motion value (or a plain number) and makes it *chase* its target using a spring physics model — giving fluid, slightly bouncy motion. Often you change a single word:
+The raw value from `useMotionValue` or `useScroll` tracks its target with no easing, which can feel mechanical. **`useSpring`** wraps a motion value (or a plain number) and makes it *chase* its target using a spring physics model — giving fluid, slightly bouncy motion. Often it is a one-line change:
 
 ```jsx
 import { useScroll, useSpring, motion } from 'framer-motion';
@@ -359,7 +359,7 @@ export const SmoothScrollBar = () => {
 
 ## 🌟 5. `mode="wait"` for Sequenced Transitions
 
-By default `AnimatePresence` animates the exiting and entering elements *simultaneously*. Setting `mode="wait"` forces the new element to wait until the old one has fully exited — perfect for page/route transitions where overlap would look messy.
+By default, `AnimatePresence` animates the exiting and entering elements *simultaneously*. Setting `mode="wait"` forces the new element to wait until the old one has fully exited — perfect for page or route transitions, where overlap would look messy.
 
 ```jsx
 <AnimatePresence mode="wait">
@@ -384,8 +384,8 @@ Answer these questions to check your understanding of layout animations. Click *
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  In standard React, when a state changes to hide a component, React immediately removes the element from the DOM. There is no time to perform transition frames. 
-  `AnimatePresence` solves this by intercepting the unmounting action. It delays removing the DOM node until the nested motion child's `exit` transition finishes executing completely.
+  In standard React, when state changes to hide a component, React immediately removes the element from the DOM, leaving no time to play any transition frames.
+  `AnimatePresence` solves this by intercepting the unmount. It delays removing the DOM node until the nested motion child's `exit` transition has finished playing completely.
 </details>
 
 ### 2. What is the difference between a motion value that Framer Motion creates automatically and one you create with `useMotionValue`?
@@ -407,14 +407,14 @@ Answer these questions to check your understanding of layout animations. Click *
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Use `useMotionValue(0)` to create an `x` value and bind it through `style` while making the element `drag="x"`. Then use `useTransform(x, [-100, 100], ["#ff0000", "#00ff00"])` to map the drag distance (input range) onto a color (output range), and bind that derived value to `backgroundColor` via `style`. As the drag updates `x`, the transform recomputes the color every frame.
+  Use `useMotionValue(0)` to create an `x` value, bind it through `style`, and make the element `drag="x"`. Then use `useTransform(x, [-100, 100], ["#ff0000", "#00ff00"])` to map the drag distance (input range) onto a color (output range), and bind that derived value to `backgroundColor` via `style`. As the drag updates `x`, the transform recomputes the color on every frame.
 </details>
 
 ### 5. What does `useScroll` return, and how do you make a scroll-linked animation feel smooth instead of snappy?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  `useScroll()` returns motion values describing scroll position, most usefully `scrollYProgress` (a value from `0` at the top to `1` at the bottom). You typically feed it into `useTransform` to drive a property like `scale` or `opacity`. Because the raw value tracks scroll exactly and can feel mechanical, you wrap it in `useSpring(scrollYProgress, { stiffness, damping })` to add physics-based inertia, producing buttery, natural motion.
+  `useScroll()` returns motion values describing scroll position, most usefully `scrollYProgress` (a value from `0` at the top to `1` at the bottom). You typically feed it into `useTransform` to drive a property like `scale` or `opacity`. Because the raw value tracks scroll exactly and can feel mechanical, you wrap it in `useSpring(scrollYProgress, { stiffness, damping })` to add physics-based inertia, producing smooth, natural motion.
 </details>
 
 ---
@@ -427,7 +427,7 @@ Apply what you learned in your project environment:
 1. Create a component `CollapsibleList.jsx` containing a list of cards.
 2. Clicking a card should toggle its expansion (revealing more details inside).
 3. Add the `layout` prop to the container card `<motion.div>` and all surrounding list cards.
-4. Verify that when a card expands, the cards below it slide down smoothly, and the card itself changes height with a smooth animation rather than jumping instantly.
+4. Verify that when a card expands, the cards below it slide down smoothly and the card itself changes height with a smooth animation rather than jumping instantly.
 5. **Stretch:** Wrap the list in `<AnimatePresence>` and add an `exit` animation so deleting a card slides it out while the rest reflow via `layout`.
 
 ### 🛠️ Exercise 2: Scroll-Linked Progress Bar with Spring Smoothing

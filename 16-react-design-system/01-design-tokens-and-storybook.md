@@ -1,18 +1,18 @@
 # Design Systems & Design Tokens 📖
 
-A **Design System** is far more than a folder of components. It is the shared toolkit — part design, part engineering — that lets a team build many products that look and behave consistently. This lesson focuses on the **theory of design systems** and the **design tokens** that power them. (Storybook, the tool for building and documenting components in isolation, gets a brief mention here and a deep dive in **§17**.)
+A **Design System** is far more than a folder of components. It is a shared toolkit — part design, part engineering — that lets a team build many products that look and behave consistently. This lesson focuses on the **theory of design systems** and the **design tokens** that power them. (Storybook, the tool for building and documenting components in isolation, gets a brief mention here and a deep dive in **§17**.)
 
 ---
 
 ## 💡 Concept & Overview
 
-If you ask a designer "what is a design system?", they will say it is a UI kit, a color palette, a typography grid, or iconography. If you ask a developer, they will say it is a component library, style guides, or documentation. **The truth is that a design system is all of these** — a little design and a little engineering glued together.
+If you ask a designer "what is a design system?", they will say it is a UI kit, a color palette, a typography grid, or iconography. If you ask a developer, they will say it is a component library, a set of style guides, or documentation. **The truth is that a design system is all of these** — a little design and a little engineering glued together.
 
 A common formal definition:
 
 > A design system is a comprehensive set of standards, guidelines, and components that ensure consistency and cohesion in the design and development of a digital product. It serves as a shared language and resource for designers, developers, and other stakeholders.
 
-The simplest mental model: **a design system is a toolkit for building digital products**. It includes everything you need so that the design stays consistent and looks the same across every screen and page.
+The simplest mental model: **a design system is a toolkit for building digital products**. It includes everything you need to keep the design consistent so that it looks the same across every screen and page.
 
 > [!NOTE]
 > A design system is **not** the product. It is the set of reusable parts and rules you assemble products *from*. Think of it as the box of LEGO bricks plus the instruction booklet — not the finished castle.
@@ -28,20 +28,20 @@ A complete design system is made of layered building blocks. The lower layers (p
 
 | Building Block       | What It Is                                                                 | Real Example                                   |
 | -------------------- | -------------------------------------------------------------------------- | ---------------------------------------------- |
-| **Design Principles** | High-level guidelines/philosophies that inform every decision              | "Simplicity", "Accessibility first", "Usability" |
+| **Design Principles** | High-level guidelines and philosophies that inform every decision          | "Simplicity", "Accessibility first", "Usability" |
 | **Style Guides**      | Concrete visual rules — typography, color palette, spacing, iconography     | Heading uses 1.5rem / 700 weight; brand blue is `#1F6FEB` |
-| **UI Components**     | Reusable interface elements, built responsive and accessible by default     | Buttons, forms, modals, navigation bars        |
+| **UI Components**     | Reusable interface elements, responsive and accessible by default           | Buttons, forms, modals, navigation bars        |
 | **Patterns**          | Repeated solutions to recurring problems                                   | Card layouts, grids, dropdown menus, empty states |
 | **Branding**          | Ensures the system aligns with company identity, tone, and values           | Logo usage, voice, brand colors, illustration style |
-| **Documentation**     | Clear instructions + best practices for *using* and *maintaining* the system | "Use `<Button variant=\"danger\">` for destructive actions" |
-| **Code**              | Front-end implementation devs integrate — React components, CSS frameworks  | A published `@acme/ui` npm package             |
-| **Accessibility**     | Recommendations so the product is usable by people with disabilities        | WCAG color-contrast ratios, keyboard navigation, ARIA roles |
+| **Documentation**     | Clear instructions and best practices for *using* and *maintaining* the system | "Use `<Button variant=\"danger\">` for destructive actions" |
+| **Code**              | The front-end implementation devs integrate — React components, CSS frameworks | A published `@acme/ui` npm package             |
+| **Accessibility**     | Recommendations that make the product usable by people with disabilities    | WCAG color-contrast ratios, keyboard navigation, ARIA roles |
 
 ### 🛒 A Real-World Metaphor
 
-Imagine you are building a **shopping app** for a brand and you want buttons, colors, fonts, iconography, and layouts to look consistent across every screen.
+Imagine you are building a **shopping app** for a brand, and you want buttons, colors, fonts, iconography, and layouts to look consistent across every screen.
 
-Think of the design system like the **kitchen of a restaurant chain**. The chain does not reinvent the meal at every location — it standardizes the *ingredients* (tokens: the exact flour, the exact sauce ratio), the *recipes* (components: how to assemble a burger), and the *plating rules* (patterns and documentation). Any cook at any branch produces the same dish. In your app, you "already have" your colors (gray, blue, red, amber, green, teal…), your typography, your icons, and your components — you just **grab them and use them**, and the app comes out consistent automatically.
+Think of the design system as the **kitchen of a restaurant chain**. The chain does not reinvent the meal at every location — it standardizes the *ingredients* (tokens: the exact flour, the exact sauce ratio), the *recipes* (components: how to assemble a burger), and the *plating rules* (patterns and documentation). Any cook at any branch produces the same dish. In your app, you "already have" your colors (gray, blue, red, amber, green, teal…), your typography, your icons, and your components — you just **grab them and use them**, and the app comes out consistent automatically.
 
 ---
 
@@ -77,7 +77,7 @@ Each semantic color (primary, neutral, warning, danger, success, gray-scale) is 
 
 ### 2. Spacing — A Numeric Scale
 
-Spacing tokens are usually a fixed **numeric scale** with friendly names so layouts breathe consistently. (In Figma these are often modeled as a "number scale" collection.)
+Spacing tokens are usually a fixed **numeric scale** with friendly names, so layouts breathe consistently. (In Figma these are often modeled as a "number scale" collection.)
 
 ```css
 :root {
@@ -169,10 +169,10 @@ A typical flow, exactly as a designer builds it in Figma:
 Once tokens live in Figma as variables, a designer can build a component (say, a button) entirely from `radius/sm`, `primary/500`, and `space/md` — and the engineer reproduces the *identical* component because both sides reference the same named tokens.
 
 > [!WARNING]
-> Never copy raw hex codes from a design file directly into components. The moment a designer tweaks a shade, every hardcoded copy silently drifts out of sync. Always go through a **named token** so a single edit propagates everywhere.
+> Never copy raw hex codes from a design file directly into components. The moment a designer tweaks a shade, every hardcoded copy silently drifts out of sync. Always go through a **named token** so that a single edit propagates everywhere.
 
 > [!TIP]
-> If you are not a designer, you can skip the Figma-authoring part — but understand the *output*. In a real company you will either be asked to build the system, or to consume tokens someone else produced. Either way, tokens are the contract between design and code.
+> If you are not a designer, you can skip the Figma-authoring part — but understand the *output*. In a real company you will either be asked to build the system or to consume tokens someone else produced. Either way, tokens are the contract between design and code.
 
 ---
 
@@ -237,11 +237,11 @@ Apply what you learned in your project environment.
 ### 🛠️ Exercise 1: Author a token file and consume it in a component
 
 1. Create a file `src/styles/tokens.css` and define **at least four token categories**: a color *scale* (e.g., `--color-primary-100/500/900`), a spacing scale (`--space-sm/md/lg`), a `--radius-md`, and an `--opacity-semi`.
-2. Import the file once at your app root (e.g., in `main.tsx` or `index.css` via `@import "./styles/tokens.css";`).
+2. Import the file once at your app root (e.g., in `main.tsx`, or in `index.css` via `@import "./styles/tokens.css";`).
 3. Create `src/components/InfoCard.tsx` with props: `title` (string), `description` (string), and `borderTheme` (a color string).
 4. Style the card **only through tokens** — use `var(--space-lg)` for padding, `var(--radius-md)` for corners, and `var(--shadow-md)` (add it to the token file) for elevation. Do **not** hardcode any pixel or hex value in the component.
 5. Render two variants:
-   - `Default`: standard card.
+   - `Default`: a standard card.
    - `Featured`: a thick golden border using `borderTheme`.
 6. Change a token value in `tokens.css` (e.g., bump `--space-lg` from `16px` to `24px`) and confirm every card updates without touching the component file.
 

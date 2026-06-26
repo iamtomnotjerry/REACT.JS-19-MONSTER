@@ -1,8 +1,8 @@
 # Storybook: Isolated Component Development & Documentation 📖
 
-When you build a button, an input, or a modal, you usually only get to *see* it after wiring it into a page, clicking through three routes, and forcing it into the right state. **Storybook** flips that around. It is an open-source tool for developing and testing UI components **in isolation** — outside of your main application — so you can build, test, and showcase each individual piece of UI *before* it ever gets integrated into the rest of the app.
+When you build a button, an input, or a modal, you usually only get to *see* it after wiring it into a page, clicking through three routes, and forcing it into the right state. **Storybook** flips that around. It is an open-source tool for developing and testing UI components **in isolation** — outside your main application — so you can build, test, and showcase each piece of UI *before* it is ever integrated into the rest of the app.
 
-In this lesson we build several stories from scratch: a button and an input, then a combined "combo" story. We cover **args**, the interactive **Controls** panel, **argTypes** for control types, story **nesting** and **renaming**, **parameters** (layout & backgrounds), the three levels of **decorators**, full **TypeScript** typing with `Meta` and `StoryObj`, **addons**, and finally **Autodocs** for auto-generated living documentation.
+In this lesson we build several stories from scratch: a button and an input, then a combined "combo" story. Along the way we cover **args**, the interactive **Controls** panel, **argTypes** for control types, story **nesting** and **renaming**, **parameters** (layout & backgrounds), the three levels of **decorators**, full **TypeScript** typing with `Meta` and `StoryObj`, **addons**, and finally **Autodocs** for auto-generated living documentation.
 
 > [!NOTE]
 > Storybook shines for **large, enterprise-scale applications and design systems** — where many people build many reusable components. For a tiny portfolio site you *can* use it, but the setup overhead rarely pays off. Reach for it when component reuse, visual consistency, and documentation actually matter.
@@ -11,14 +11,14 @@ In this lesson we build several stories from scratch: a button and an input, the
 
 ## ⚡ 1. What Is Storybook & Why Use It?
 
-Think of Storybook as a **photo studio for your components**. In a studio you put a single product against a clean backdrop, change the lighting, swap props, and shoot it from every angle — without the noise of the rest of the showroom. Storybook does the same for UI: it isolates one component and lets you exercise every visual state on demand.
+Think of Storybook as a **photo studio for your components**. In a studio you place a single product against a clean backdrop, change the lighting, swap props, and shoot it from every angle — without the noise of the rest of the showroom. Storybook does the same for UI: it isolates one component and lets you exercise every visual state on demand.
 
 It delivers four big benefits:
 
 | Benefit | What it means | Why it matters |
 | :--- | :--- | :--- |
 | **Component isolation** | Build & test a component without running the whole app. | You focus on *one* component's behavior, not the entire routing/data layer. |
-| **Visual testing** | A visual interface to view every state: themes, sizes, data inputs, disabled/loading. | Catches visual/behavioral bugs *early*, before integration. |
+| **Visual testing** | A visual interface for viewing every state: themes, sizes, data inputs, disabled/loading. | Catches visual and behavioral bugs *early*, before integration. |
 | **Living documentation** | Each "story" is a documented use case, auto-displayed in the UI. | Docs stay in sync as the component evolves. |
 | **Addons** | Extensions for a11y checks, responsive testing, interaction testing, and more. | Extend Storybook to fit your team's workflow. |
 
@@ -29,7 +29,7 @@ It delivers four big benefits:
 
 ## ⚡ 2. Installation & Initialization
 
-Storybook is not limited to React — it works with Svelte, Vue, and other frameworks. Start with any React app (Vite or Create React App), then initialize Storybook on top of it.
+Storybook is not limited to React — it also works with Svelte, Vue, and other frameworks. Start with any React app (Vite or Create React App), then initialize Storybook on top of it.
 
 ```bash
 # 1. Create a fresh React + TypeScript project (Vite)
@@ -55,6 +55,7 @@ npm run storybook
 ```
 
 This boots the Storybook UI in your browser. You can build not just a simple button, but entire headers and even full pages — and document each one.
+
 
 ### The `.storybook/` configuration files
 
@@ -92,7 +93,7 @@ export default config;
 
 ## ⚡ 3. Your First Story (CSF — Component Story Format)
 
-Delete the generated `src/stories/` folder and recreate your own. Stories use **CSF (Component Story Format)**: a plain `.stories.tsx` file with a **default export** (metadata) and one or more **named exports** (the stories).
+Delete the generated `src/stories/` folder and recreate your own. Stories use **CSF (Component Story Format)**: a plain `.stories.tsx` file with a **default export** (metadata) and one or more **named exports** (the stories themselves).
 
 First, a plain component (no TypeScript yet — we add types later so you can focus on the Storybook syntax):
 
@@ -129,7 +130,7 @@ export const Primary = () => <Button />;
 
 ## ⚡ 4. Variations (Flavors) Without Copy-Paste
 
-Make the component accept arbitrary props so each story can configure it differently — no need to duplicate the component:
+Make the component accept arbitrary props so each story can configure it differently — with no need to duplicate the component:
 
 ```jsx
 // src/stories/components/Button.jsx
@@ -156,7 +157,7 @@ export const Secondary = () => <Button variant="secondary" />;
 export const Danger = () => <Button variant="danger" />;
 ```
 
-Each named export shows up as a separate variation under the `Button` entry in the sidebar — all from one component, configured with different props.
+Each named export shows up as a separate variation under the `Button` entry in the sidebar — all from one component, each configured with different props.
 
 ---
 
@@ -215,7 +216,7 @@ export const Primary = {
 };
 ```
 
-Open a story and click the **Controls** tab (or press `Alt + A`) to reveal the **Controls panel**. There you can flip `primary` on/off, retype `label`, and click the button to fire `onClick` — all live, with no code changes.
+Open a story and click the **Controls** tab (or press `Alt + A`) to reveal the **Controls panel**. There you can flip `primary` on and off, retype `label`, and click the button to fire `onClick` — all live, with no code changes.
 
 > [!TIP]
 > The Controls panel is the heart of Storybook's interactivity. Args feed the panel; the panel feeds the component. Change a value and the rendered component re-renders instantly — perfect for testing every state in isolation.
@@ -224,7 +225,7 @@ Open a story and click the **Controls** tab (or press `Alt + A`) to reveal the *
 
 ## ⚡ 6. argTypes & Control Types
 
-`args` set the *values*; **`argTypes`** tell Storybook *how each prop should be edited* in the Controls panel. They are metadata that map a prop to a specific control widget — a color picker, a dropdown, a number stepper, and so on.
+`args` set the *values*; **`argTypes`** tell Storybook *how each prop should be edited* in the Controls panel. They are metadata that map each prop to a specific control widget — a color picker, a dropdown, a number stepper, and so on.
 
 ```tsx
 // src/stories/components/Button.tsx
@@ -354,7 +355,7 @@ export default {
 
 ### 🧩 Renaming a story with `storyName`
 
-By default a story's sidebar label is its export name. You can override it with **`storyName`** (an older but handy technique):
+By default, a story's sidebar label is its export name. You can override it with **`storyName`** (an older but handy technique):
 
 ```tsx
 // src/stories/Button.stories.tsx
@@ -402,7 +403,7 @@ export const Combo = () => (
 );
 ```
 
-This is great for documenting how components look **next to each other** — a form layout, a toolbar, a card with actions.
+This is great for documenting how components look **next to each other** — a form layout, a toolbar, or a card with actions.
 
 ---
 
@@ -439,7 +440,7 @@ export default {
 
 ## ⚡ 10. Decorators: Three Levels of Wrapping
 
-A **decorator** is a function that **wraps** a story, letting you inject extra layout, styling, or context (like a theme provider or router) around the rendered component. It receives the `Story` and returns it wrapped in whatever you want.
+A **decorator** is a function that **wraps** a story, letting you inject extra layout, styling, or context (such as a theme provider or router) around the rendered component. It receives the `Story` and returns it wrapped in whatever you want.
 
 There are **three levels**, from narrowest to widest scope:
 
@@ -493,7 +494,7 @@ export const Secondary = { args: { label: "Click me", color: "#6c757d" } };
 
 ### 🛠️ Global (entire project)
 
-Best practice: put reusable decorators in their own file, then register them in `preview.ts`. Define the decorator separately:
+Best practice: put reusable decorators in their own file, then register them in `preview.ts`. First, define the decorator separately:
 
 ```tsx
 // .storybook/decorators.tsx
@@ -602,13 +603,13 @@ export const Red: Story = {
 
 ## ⚡ 12. Addons
 
-**Addons** are extensions that add capabilities to Storybook — exactly like VS Code extensions add capabilities to your editor. `init` installs a default set:
+**Addons** are extensions that add capabilities to Storybook — much like VS Code extensions add capabilities to your editor. `init` installs a default set:
 
 - **`@storybook/addon-essentials`** — the core bundle (Controls, Actions, Backgrounds, Viewport, etc.).
 - **`@storybook/addon-interactions`** — write & replay interaction tests.
 - **`@storybook/addon-onboarding`** — the first-run guided tour.
 
-You browse more on the official addons catalog and install them like any package:
+You can browse more in the official addons catalog and install them like any other package:
 
 ```bash
 # Example: install the official documentation addon
@@ -647,7 +648,7 @@ export const Default: Story = {
 };
 ```
 
-Restart Storybook and a new **Docs** entry appears. It shows the component, a live code snippet, an editable props table (label, disabled, onClick…), and every story rendered inline — all generated from your stories. This is the "living documentation" so many teams adopt Storybook for.
+Restart Storybook and a new **Docs** entry appears. It shows the component, a live code snippet, an editable props table (label, disabled, onClick…), and every story rendered inline — all generated from your stories. This is the "living documentation" that so many teams adopt Storybook for.
 
 ---
 

@@ -1,6 +1,6 @@
 # React Hooks & Event Handling with TypeScript 🦾
 
-Typing state hooks, DOM references, browser events, reducers, effects, and shared context is essential for building fully typed, secure React applications. TypeScript ensures that every value, element, and action exposes proper autocomplete and protects you from passing the wrong shape into the wrong place.
+Typing state hooks, DOM references, browser events, reducers, effects, and shared context is essential for building fully typed, robust React applications. TypeScript ensures that every value, element, and action exposes proper autocomplete and protects you from passing the wrong shape into the wrong place.
 
 ---
 
@@ -11,7 +11,7 @@ When you wire hooks together in plain JavaScript, React happily accepts whatever
 Think of TypeScript with hooks like the **labeled compartments in a professional toolbox**. In a messy drawer, any tool can go anywhere — you only discover you grabbed a screwdriver instead of a chisel when the wood splits. A labeled toolbox tells you *immediately* which slot expects which tool. Each hook is a compartment: `useState` is labeled with the shape of the value it holds, `useReducer` is labeled with the exact set of actions it accepts, `useContext` is labeled with the contract every consumer must honor, and event handlers are labeled with the precise DOM element they fire on.
 
 > [!NOTE]
-> TypeScript usually **infers** types from your initial values, so you write *less* code, not more. You only add explicit generics when inference cannot figure out the type on its own — for example when the initial value is `null`, or when a reducer must know its full universe of actions up front.
+> TypeScript usually **infers** types from your initial values, so you write *less* code, not more. You only add explicit generics when inference cannot figure out the type on its own — for example, when the initial value is `null`, or when a reducer must know its full universe of actions up front.
 
 > [!TIP]
 > Forgot the name of a React event type? Write the handler **inline** in JSX (e.g. `onClick={(e) => {}}`), hover the `e` parameter in VS Code, and copy the type the tooltip shows. This trick works for every event and is faster than memorizing the catalog.
@@ -23,7 +23,7 @@ Think of TypeScript with hooks like the **labeled compartments in a professional
 | `useState` | The state value + its setter | Initial value is `null`/`undefined`, or a union/object shape |
 | `useRef` | `.current` (DOM node or mutable box) | Always pass the element type for DOM refs |
 | Event handlers | Nothing automatically when extracted | When you move a handler out of inline JSX |
-| `useReducer` | State + `dispatch`, narrowed per action | Define state type **and** a discriminated-union action type |
+| `useReducer` | State + `dispatch`, narrowed per action | Define a state type **and** a discriminated-union action type |
 | `useEffect` | Nothing (it returns `void`/cleanup) | Type the **state** that stores fetched data |
 | Context | The value every consumer receives | Pass a generic to `createContext` |
 
@@ -31,14 +31,14 @@ Think of TypeScript with hooks like the **labeled compartments in a professional
 
 ## ⚡ 1. Typing `useState`
 
-TypeScript usually infers the type of state variables based on their initial value:
+TypeScript usually infers the type of state variables from their initial value:
 
 ```tsx
 const [count, setCount] = useState(0); // Inferred as: number
 const [text, setText] = useState("");   // Inferred as: string
 ```
 
-However, if your state is initialized to `null` or `undefined`, or can support multiple type shapes, you must define it using **Generics**:
+However, if your state is initialized to `null` or `undefined`, or can hold multiple type shapes, you must define it using **Generics**:
 
 ```tsx
 interface User {
@@ -79,7 +79,7 @@ const updateName = (name: string) => {
 
 ## ⚡ 2. Typing `useRef`
 
-`useRef` behaves differently depending on whether it is used for DOM elements or mutable values.
+`useRef` behaves differently depending on whether it holds a DOM element or a mutable value.
 
 ### A. DOM Reference (Read-only `.current`)
 To target a DOM element, pass the HTML element interface name as a generic parameter, and initialize the ref with `null`:
@@ -106,7 +106,7 @@ export const TextInput = () => {
 > If a DOM ref's `.current` might be `null` at the moment you read it, TypeScript will flag `inputRef.current.value`. Prefer optional chaining (`inputRef.current?.value`) so your code stays safe. The non-null assertion (`inputRef.current!.value`) silences the check but removes the safety net — only use it when you are certain the element is mounted.
 
 ### B. Mutable Values (Writable `.current`)
-If you are storing a value that persists without triggering re-renders, provide the type and do NOT pass null:
+If you are storing a value that persists across renders without triggering them, provide the type and do NOT pass null:
 
 ```tsx
 const renderCount = useRef<number>(0);
@@ -117,7 +117,7 @@ renderCount.current += 1; // Can write directly
 
 ## ⚡ 3. Typing Events
 
-Writing inline event handlers in JSX doesn't require manual types because React automatically infers them. However, when extracting event handlers into separate functions, you must annotate the event parameter manually:
+Inline event handlers in JSX don't require manual types because React infers them automatically. When you extract a handler into a separate function, however, you must annotate the event parameter yourself:
 
 ```tsx
 import React, { useState } from 'react';
@@ -249,7 +249,7 @@ export const counterReducer = (
 
 ## ⚡ 5. Typing `useEffect` (Fetching API Data)
 
-`useEffect` itself returns nothing (or a cleanup function), so there is no generic to pass to it. The typing work happens around it: you type the **state** that holds the fetched data, and you await an `async` helper **defined inside** the effect (an effect callback itself must not be `async`, because it would return a Promise where React expects a cleanup function).
+`useEffect` itself returns nothing (or a cleanup function), so there is no generic to pass to it. The typing work happens around it: you type the **state** that holds the fetched data, and you await an `async` helper **defined inside** the effect (the effect callback itself must not be `async`, because it would return a Promise where React expects a cleanup function).
 
 ```tsx
 import { useState, useEffect } from "react";
@@ -300,7 +300,7 @@ export const ProductCard = () => {
 > [!WARNING]
 > Do **not** write `useEffect(async () => { ... }, [])`. An `async` function always returns a Promise, but React expects an effect to return either nothing or a cleanup function. Define the async helper inside and call it, as shown above.
 
-The **dependency array** is also type-relevant: every value from props or state that the effect reads should be listed. With TypeScript and the `react-hooks` ESLint rule together, a forgotten dependency is flagged so your effect never reads a stale value.
+The **dependency array** is also type-relevant: every value from props or state that the effect reads should be listed. With TypeScript and the `react-hooks` ESLint rule working together, a forgotten dependency is flagged so your effect never reads a stale value.
 
 ---
 
@@ -389,7 +389,7 @@ export const App = () => (
 ```
 
 > [!NOTE]
-> Starting the context as `undefined` is intentional. It lets the `useCounter` hook detect misuse and fail with a readable message during development, instead of components rendering with a meaningless placeholder default that would only break later.
+> Starting the context as `undefined` is intentional. It lets the `useCounter` hook detect misuse and fail with a readable message during development, instead of letting components render with a meaningless placeholder default that would only break later.
 
 ---
 
@@ -406,7 +406,7 @@ These three tools answer different questions: *how complex are my transitions?* 
 | Scope | Local to one component | Local to one component | App-wide / subtree-wide |
 | Reach for it when | A toggle, a text field, a counter | A form wizard, undo/redo, a cart | Theme, auth user, a global counter |
 
-A good rule of thumb: start with `useState`. Promote to `useReducer` when the update logic grows branchy or several values change in lockstep. Reach for **Context** only when *unrelated, distant* components need the same state — and note that you can put a `useReducer`'s `state` and `dispatch` *inside* a Context for app-wide complex state.
+A good rule of thumb: start with `useState`. Promote to `useReducer` when the update logic grows branchy or several values change in lockstep. Reach for **Context** only when *unrelated, distant* components need the same state — and note that you can place a `useReducer`'s `state` and `dispatch` *inside* a Context for app-wide complex state.
 
 ---
 
@@ -418,8 +418,8 @@ Answer these questions to check your understanding of hooks and events. Click **
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  You need to pass generic type arguments (e.g. `useState<Type>()`) when the type cannot be correctly inferred from the initial value. This occurs when:
-  1. The initial value is `null` or `undefined` (e.g., fetching data later).
+  You need to pass generic type arguments (e.g. `useState<Type>()`) when the type cannot be correctly inferred from the initial value. This happens when:
+  1. The initial value is `null` or `undefined` (e.g., you fetch the data later).
   2. The state holds a union of multiple possible types (e.g., `useState<"light" | "dark">("light")`).
   3. The state manages complex objects or arrays of items.
 </details>
@@ -430,7 +430,7 @@ Answer these questions to check your understanding of hooks and events. Click **
 
   A discriminated union gives every action a shared literal `type` field (e.g. `{ type: "increment" }` vs `{ type: "incrementBy"; payload: number }`). Inside the reducer's `switch (action.type)`, TypeScript **narrows** the action to the exact member for each `case`, so it knows precisely which extra fields (like `payload`) exist. This means:
   - Reading a `payload` in a case that has none is a compile error.
-  - `dispatch` rejects unknown action types and missing/wrong payloads.
+  - `dispatch` rejects unknown action types and missing or wrong payloads.
   - The reducer and every dispatch site stay in sync automatically when you edit the union.
 </details>
 
@@ -438,7 +438,7 @@ Answer these questions to check your understanding of hooks and events. Click **
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  An `async` function always returns a Promise. React expects the effect callback to return either nothing or a **cleanup function** — never a Promise. If you write `useEffect(async () => {...}, [])`, React would receive a Promise as the "cleanup," which is incorrect (and TypeScript flags it). The fix is to define an `async` helper (e.g. `fetchData`) inside the effect and call it synchronously, keeping the effect callback itself non-async.
+  An `async` function always returns a Promise, but React expects the effect callback to return either nothing or a **cleanup function** — never a Promise. If you write `useEffect(async () => {...}, [])`, React receives a Promise as the "cleanup," which is incorrect (and TypeScript flags it). The fix is to define an `async` helper (e.g. `fetchData`) inside the effect and call it synchronously, keeping the effect callback itself non-async.
 </details>
 
 ### 4. Why do we initialize `createContext` with `undefined` and write a safe-consumer hook that throws?
@@ -452,8 +452,8 @@ Answer these questions to check your understanding of hooks and events. Click **
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  - **Single text input → `useState`.** It is one simple, independent value; a direct setter is the least ceremony.
-  - **Multi-step wizard → `useReducer`.** Several fields change together and transitions (next step, validate, reset) are branchy. A typed reducer with a discriminated-union action type centralizes that logic and keeps every transition type-safe.
+  - **Single text input → `useState`.** It is one simple, independent value, so a direct setter is the least ceremony.
+  - **Multi-step wizard → `useReducer`.** Several fields change together and the transitions (next step, validate, reset) are branchy. A typed reducer with a discriminated-union action type centralizes that logic and keeps every transition type-safe.
   
   If those wizard values also needed to be read by distant, unrelated components, you would lift the `useReducer` into a **Context** so it can be shared without prop-drilling.
 </details>
@@ -466,14 +466,14 @@ Apply what you learned in your project environment:
 
 ### 🛠️ Exercise 1: Canvas Coordinates Tracer & Typed Form
 1. Create a component `CoordinatesForm.tsx` (ensure it uses the `.tsx` extension).
-2. Set up state tracking coordinates: `const [coords, setCoords] = useState<{ x: number; y: number } | null>(null)`.
-3. Render a container `<div>` acting as a trace area. Track mouse movement over the container using:
+2. Set up state to track coordinates: `const [coords, setCoords] = useState<{ x: number; y: number } | null>(null)`.
+3. Render a container `<div>` that acts as a trace area. Track mouse movement over the container using:
    ```tsx
    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
      setCoords({ x: e.clientX, y: e.clientY });
    };
    ```
-4. Render the coordinates on screen. Include an input field to enter a label, capturing input via a typed `onChange` function (`React.ChangeEvent<HTMLInputElement>`).
+4. Render the coordinates on screen. Include an input field for entering a label, capturing input via a typed `onChange` function (`React.ChangeEvent<HTMLInputElement>`).
 5. Add a `useRef<HTMLInputElement>(null)` and a "Focus label" button whose `onClick` calls `inputRef.current?.focus()`.
 6. Verify that VS Code provides complete autocomplete on your event variables and that `coords` is correctly narrowed before you read `coords.x`.
 
@@ -493,7 +493,7 @@ Build a tiny shopping cart that combines `useReducer` and Context.
 2. Create the context with `createContext<{ state: CartState; dispatch: React.Dispatch<CartAction> } | undefined>(undefined)`.
 3. Build a typed `CartProvider` (`FC<{ children: ReactNode }>`) that calls `useReducer(cartReducer, { items: [] })` and provides `{ state, dispatch }`.
 4. Write a safe-consumer hook `useCart()` that throws `"useCart must be used within a CartProvider"` when used outside the Provider, and returns the narrowed (non-`undefined`) value.
-5. In a `CartView` component, consume `useCart()` to list items and wire buttons that dispatch `add`, `remove`, and `clear`. Confirm TypeScript blocks a dispatch with a missing or wrong `payload`.
+5. In a `CartView` component, consume `useCart()` to list items and wire buttons that dispatch `add`, `remove`, and `clear`. Confirm that TypeScript blocks a dispatch with a missing or wrong `payload`.
 
 ### 🛠️ Exercise 3: Typed Data Fetch with `useEffect`
 1. Create `UserList.tsx`. Define an interface `User { id: number; name: string; username: string; email: string; phone: string }`.

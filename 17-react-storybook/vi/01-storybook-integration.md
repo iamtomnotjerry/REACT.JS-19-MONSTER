@@ -23,7 +23,7 @@ Nó mang lại bốn lợi ích lớn:
 | **Addons** | Tiện ích mở rộng cho kiểm tra a11y, kiểm thử responsive, kiểm thử tương tác và hơn nữa. | Mở rộng Storybook cho phù hợp quy trình của nhóm. |
 
 > [!TIP]
-> Một **story** là một ví dụ được render đơn lẻ, có tên, của một component ở một trạng thái cụ thể (ví dụ `Primary`, `Disabled`, `Loading`). Một file component thường sở hữu *nhiều* story — mỗi "phiên bản" hình ảnh một story.
+> Một **story** là một ví dụ đơn lẻ, có tên, được render của một component ở một trạng thái cụ thể (ví dụ `Primary`, `Disabled`, `Loading`). Một file component thường sở hữu *nhiều* story — mỗi "phiên bản" hình ảnh là một story.
 
 ---
 
@@ -402,7 +402,7 @@ export const Combo = () => (
 );
 ```
 
-Cách này rất hợp để tài liệu hóa cách các component trông như thế nào **cạnh nhau** — một layout form, một thanh toolbar, một card có các action.
+Cách này rất hợp để tài liệu hóa các component trông ra sao khi đặt **cạnh nhau** — một layout form, một toolbar, hay một card có các action.
 
 ---
 
@@ -439,7 +439,7 @@ export default {
 
 ## ⚡ 10. Decorators: Ba Cấp Độ Bao Bọc
 
-Một **decorator** là một hàm **bao bọc** một story, cho phép bạn tiêm thêm layout, styling hoặc context (như một theme provider hay router) xung quanh component được render. Nó nhận `Story` và trả về nó được bao bọc trong bất cứ thứ gì bạn muốn.
+Một **decorator** là một hàm **bao bọc** một story, cho phép bạn bổ sung thêm layout, styling hoặc context (như một theme provider hay router) xung quanh component được render. Nó nhận vào `Story` và trả về `Story` đó được bao bọc trong bất cứ thứ gì bạn muốn.
 
 Có **ba cấp độ**, từ phạm vi hẹp nhất đến rộng nhất:
 
@@ -647,7 +647,7 @@ export const Default: Story = {
 };
 ```
 
-Khởi động lại Storybook và một mục **Docs** mới sẽ xuất hiện. Nó hiển thị component, một đoạn code trực tiếp, một bảng prop có thể chỉnh sửa (label, disabled, onClick…), và mọi story được render nội tuyến — tất cả được tạo từ các story của bạn. Đây chính là "tài liệu sống" mà rất nhiều nhóm chọn dùng Storybook vì nó.
+Khởi động lại Storybook và một mục **Docs** mới sẽ xuất hiện. Nó hiển thị component, một đoạn code trực tiếp, một bảng prop có thể chỉnh sửa (label, disabled, onClick…), và mọi story được render nội tuyến — tất cả được tạo từ các story của bạn. Đây chính là "tài liệu sống" — lý do mà rất nhiều nhóm chọn dùng Storybook.
 
 ---
 

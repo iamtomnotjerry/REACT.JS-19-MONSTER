@@ -6,7 +6,7 @@ This lesson covers **Mutations** (sending data modifications to a server like PO
 
 ## 📖 Concept & Overview
 
-So far we used `useQuery` to **read** data from a server. But real apps also need to **write** data — create a todo, edit a profile, delete a comment. In TanStack Query, every write goes through the **`useMutation`** hook. After a successful write, the data you previously cached is now out of date, so you **invalidate** the affected query keys to trigger a fresh background fetch and keep the UI synchronized.
+So far we used `useQuery` to **read** data from a server. But real apps also need to **write** data — create a todo, edit a profile, delete a comment. In TanStack Query, every write goes through the **`useMutation`** hook. After a successful write, the data you previously cached is out of date, so you **invalidate** the affected query keys to trigger a fresh background fetch and keep the UI synchronized.
 
 > [!NOTE]
 > **Queries are reads; mutations are writes.** A `useQuery` runs automatically on mount and is keyed/cached. A `useMutation` does **nothing** until you explicitly call `mutate()` or `mutateAsync()`. Mutations are not cached by a query key — instead they expose a lifecycle (`onMutate` → `onError`/`onSuccess` → `onSettled`) that lets you react to each phase.
@@ -43,7 +43,7 @@ While `useQuery` is designed for fetching data, **`useMutation`** is used to cre
 
 ### Key Differences:
 * `useQuery` runs automatically on component mount. `useMutation` does **not**; you trigger it manually by calling the `mutate(variables)` function.
-* `useMutation` does not require query keys (though it can interact with them during onSuccess cycles).
+* `useMutation` does not require a query key (though it can interact with cached keys inside callbacks such as `onSuccess`).
 
 ```jsx
 import { useMutation } from '@tanstack/react-query';
@@ -92,9 +92,9 @@ export const AddTodoComponent = () => {
 
 ## ⚡ 2. Cache Invalidation (`invalidateQueries`)
 
-When you mutate data on the server, the client-side cache of your queries becomes outdated (stale). To keep the UI synchronized, you must tell TanStack Query to throw away the old cache and fetch fresh data.
+When you mutate data on the server, the client-side cache of your queries becomes stale. To keep the UI synchronized, you tell TanStack Query to mark the old cache as outdated and fetch fresh data.
 
-We do this by instantiating the **`useQueryClient`** hook and calling **`invalidateQueries`** inside the mutation's `onSuccess` callback:
+We do this by reading the client from the **`useQueryClient`** hook and calling **`invalidateQueries`** inside the mutation's `onSuccess` callback:
 
 ```jsx
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -352,7 +352,7 @@ Answer these questions to check your understanding of mutations. Click **Reveal 
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  `useMutation` is designed for side effects that write, update, or delete data (which should only happen due to explicit user interactions like clicking a button or submitting a form). Running them automatically on mount would cause duplicate writes and database spam. Instead, it returns a `mutate` function for you to invoke on-demand.
+  `useMutation` is designed for side effects that write, update, or delete data, which should only happen in response to explicit user interactions like clicking a button or submitting a form. Running a mutation automatically on mount would cause duplicate writes and spam the database. Instead, the hook returns a `mutate` function for you to invoke on demand.
 </details>
 
 ### 2. What does `queryClient.invalidateQueries({ queryKey: ['todos'] })` do under the hood?
@@ -360,8 +360,8 @@ Answer these questions to check your understanding of mutations. Click **Reveal 
   <summary><b>Reveal Answer</b></summary>
 
   It does two things:
-  1. Marks any active queries with key `['todos']` (and, by prefix, keys starting with `'todos'`) as stale.
-  2. If those queries are currently rendered on screen, it immediately triggers a background refetch to sync the UI with the backend server database automatically.
+  1. Marks any query with the key `['todos']` (and, by prefix, any key starting with `'todos'`) as stale.
+  2. For queries that are currently active (rendered on screen), it immediately triggers a background refetch to sync the UI with the backend server.
 </details>
 
 ### 3. In an optimistic update, what is the purpose of the value returned from `onMutate`, and where is it used?

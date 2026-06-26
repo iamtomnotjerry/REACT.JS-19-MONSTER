@@ -6,7 +6,7 @@ Bài học này trình bày ba mô hình composition nâng cao trong React: **Re
 
 ## 📖 Khái niệm & Tổng quan
 
-Cả ba mô hình đều trả lời cùng một câu hỏi cốt lõi: **"Làm thế nào để một component vừa linh hoạt, vừa tái sử dụng được mà không bị chìm ngập trong props?"** Thay vì viết cứng layout và hành vi, các mô hình này trao quyền điều khiển lại cho phía tiêu thụ component.
+Cả ba mô hình đều trả lời cùng một câu hỏi cốt lõi: **"Làm thế nào để một component vừa linh hoạt, vừa tái sử dụng được mà không bị chìm ngập trong props?"** Thay vì viết cứng layout và hành vi, các mô hình này trao quyền điều khiển lại cho bên sử dụng component.
 
 Một phép ẩn dụ hữu ích từ đời thực là một **cửa hàng khung tranh** 🖼️:
 
@@ -24,7 +24,7 @@ Một phép ẩn dụ hữu ích từ đời thực là một **cửa hàng khun
 
 | Mô hình | Chia sẻ… | Cơ chế | Phù hợp nhất cho |
 | --- | --- | --- | --- |
-| **Render Props** | **Logic** quản lý trạng thái | Một prop dạng hàm được gọi trong lúc render | Mouse tracker, data fetcher, toggle nơi phía tiêu thụ tự thiết kế UI |
+| **Render Props** | **Logic** quản lý trạng thái | Một prop dạng hàm được gọi trong lúc render | Mouse tracker, data fetcher, toggle khi bên sử dụng tự thiết kế UI |
 | **Compound Components** | **State** ngầm định giữa các thành phần anh em | Cha + các sub-component + `Context` | `<Tabs>`, `<Accordion>`, `<Select>` — các nhóm element phối hợp với nhau |
 | **Slots** | **Vị trí đặt nội dung** | `children` và/hoặc các prop JSX có tên | Card, modal, layout có các vùng cố định (header / body / footer) |
 
@@ -40,9 +40,9 @@ Một phép ẩn dụ hữu ích từ đời thực là một **cửa hàng khun
 
 ---
 
-## ⚡ 1. Mô hình Render Props Pattern
+## ⚡ 1. Mô hình Render Props
 
-Mô hình **Render Props** là kỹ thuật chia sẻ logic quản lý trạng thái giữa các component bằng cách dùng một prop có giá trị là một hàm. Thay vì tự render layout viết cứng của riêng mình, component sẽ gọi prop dạng hàm và truyền các giá trị state cục bộ của nó làm đối số, nhường lại việc thiết kế layout UI cho phía tiêu thụ:
+Mô hình **Render Props** là kỹ thuật chia sẻ logic quản lý trạng thái giữa các component bằng cách dùng một prop có giá trị là một hàm. Thay vì tự render layout viết cứng của riêng mình, component sẽ gọi prop dạng hàm và truyền các giá trị state cục bộ của nó làm đối số, nhường lại việc thiết kế layout UI cho bên sử dụng:
 
 ```jsx
 import { useState } from 'react';
@@ -57,7 +57,7 @@ export const Toggle = ({ render }) => {
 };
 ```
 
-### Cách tiêu thụ Render Prop:
+### Cách sử dụng Render Prop:
 ```jsx
 import { Toggle } from './Toggle';
 
@@ -80,7 +80,7 @@ export const ToggleApp = () => {
 
 ### Một ví dụ kinh điển: Mouse Tracker
 
-Một component `MouseTracker` sở hữu *logic* lắng nghe chuyển động của chuột, nhưng để phía tiêu thụ tự quyết định cách *hiển thị* vị trí:
+Một component `MouseTracker` sở hữu *logic* lắng nghe chuyển động của chuột, nhưng để bên sử dụng tự quyết định cách *hiển thị* vị trí:
 
 ```tsx
 import { useState } from 'react';
@@ -123,7 +123,7 @@ export const App = () => (
 
 ---
 
-## ⚡ 2. Mô hình Compound Components Pattern
+## ⚡ 2. Mô hình Compound Components
 
 Mô hình **Compound Components** cho phép bạn thiết kế một nhóm component phối hợp ăn ý với nhau để chia sẻ state ngầm định và render ra một giao diện thống nhất, tương tự thẻ `<select>` và `<option>` trong HTML.
 
@@ -217,7 +217,7 @@ export const Dashboard = () => {
 
 ---
 
-## 🧩 3. Mô hình Slot Pattern
+## 🧩 3. Mô hình Slot
 
 Một **slot** cho phép một component nhận nội dung động từ component cha và đặt nội dung đó vào một vùng cụ thể trong layout của chính nó. Vì React **không có cơ chế slot tích hợp sẵn** (khác với Vue hay Web Components), chúng ta tạo ra slot bằng **props** — hoặc là prop đặc biệt `children`, hoặc là các prop JSX có tên.
 
@@ -466,7 +466,7 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu của bạn 
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Chúng quản lý state ngầm định bằng cách dùng **React Context**. Component cha (ví dụ `<Tabs>`) bao bọc cây component trong một Context Provider chứa các state active và các handler. Các sub-component con (ví dụ `<Tabs.Trigger>`) gọi `useContext` dưới nền để tự động truy cập các cấu hình, loại bỏ nhu cầu phải truyền props xuống thủ công.
+  Chúng quản lý state ngầm định bằng cách dùng **React Context**. Component cha (ví dụ `<Tabs>`) bao bọc cây component trong một Context Provider chứa các state active và các handler. Các sub-component con (ví dụ `<Tabs.Trigger>`) gọi `useContext` ở bên dưới để tự động truy cập các giá trị đó, loại bỏ nhu cầu phải truyền props xuống thủ công.
 </details>
 
 ### 3. Slots có phải là tính năng tích hợp sẵn của React không, và bốn biến thể slot được phân biệt như thế nào?
@@ -509,7 +509,7 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu của bạn 
    - `<Accordion.Header value={id}>`: Kích hoạt thay đổi state khi nhấp.
    - `<Accordion.Panel value={id}>`: Chỉ render nội dung con lồng nhau nếu `openId === id`.
 4. Đăng ký chúng làm các compound property trên `Accordion`.
-5. Tiêu thụ các component trong `App.tsx` và xác minh rằng việc mở một mục sẽ ngầm định thu gọn các mục khác.
+5. Sử dụng các component trong `App.tsx` và xác minh rằng việc mở một mục sẽ ngầm định thu gọn các mục khác.
 
 ### 🛠️ Bài tập 2: Xây dựng `<PageLayout>` có slot (slot có tên + slot mặc định)
 Luyện tập kết hợp các biến thể slot trong một component.

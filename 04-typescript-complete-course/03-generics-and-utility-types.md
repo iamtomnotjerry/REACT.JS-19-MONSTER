@@ -39,7 +39,7 @@ Generics are TypeScript's answer to a simple problem: *how do I write one piece 
 
 ## ⚡ 1. TypeScript Generics
 
-Generics act as type variables—meaning you can pass a type parameter (typically represented as `<T>`) into a function or component just like passing an argument.
+Generics act as type variables—meaning you can pass a type parameter (typically written as `<T>`) into a function or component just as you would pass an argument.
 
 ### A. Generic Functions
 Instead of using `any` (which destroys type safety), generics preserve the exact type connection between inputs and outputs:
@@ -71,7 +71,7 @@ const bools = uniqueDataType<boolean>(true, false);       // [boolean, boolean]
 > You usually do **not** need to write the angle brackets at the call site (`uniqueDataType<number>(...)`). TypeScript *infers* `T` from the arguments you pass. Specify it explicitly only when inference cannot figure it out, or when you want to lock the type down deliberately.
 
 ### B. Generic Constraints (`extends`)
-Sometimes you want a function to support multiple types, but with a requirement that they contain specific properties. We enforce this using the **`extends`** keyword:
+Sometimes you want a function to support multiple types, but only those that contain specific properties. We enforce this requirement using the **`extends`** keyword:
 
 ```typescript
 interface HasId {
@@ -161,7 +161,7 @@ Notice that `stringBox.setContent` will only accept strings and `numberBox.setCo
 
 ## ⚡ 2. Built-in Utility Types
 
-TypeScript provides several global utility helper types to transform existing types into new shapes.
+TypeScript provides several global utility types that transform existing types into new shapes.
 
 | Utility Type | Description | Use Case |
 | :--- | :--- | :--- |
@@ -214,7 +214,7 @@ const submission: RegisterData = {
 
 ## ⚡ 3. Type Narrowing
 
-**Type narrowing** is the process of refining a variable's type *within a conditional block* of code, allowing you to write more precise and type-safe logic. When a variable can be one of several types (a *union*), TypeScript will not let you use type-specific methods until you have *proven* which type you are holding. The tools that do this proving are called **type guards**.
+**Type narrowing** is the process of refining a variable's type *within a conditional block* of code, letting you write more precise and type-safe logic. When a variable can be one of several types (a *union*), TypeScript will not let you use type-specific methods until you have *proven* which type you are holding. The tools that do this proving are called **type guards**.
 
 > **A real-world metaphor: the airport security lane 🛂**
 >
