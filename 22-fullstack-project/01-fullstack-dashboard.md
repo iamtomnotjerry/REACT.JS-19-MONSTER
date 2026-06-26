@@ -2,21 +2,21 @@
 
 The final milestone of this course brings together every concept we have learned—React 19, TypeScript, state management (Redux Toolkit), styling, and API integration—into a production-grade **FullStack Movie Dashboard**.
 
-In this lesson, we build the project end-to-end: an **Express + MongoDB** backend (authentication, movies, genres, reviews) and a **React + RTK Query** frontend that consumes it, including a protected admin dashboard. This is a long lesson by design—treat each section as a buildable checkpoint.
+In this lesson, we build the project end-to-end: an **Express + MongoDB** backend (authentication, movies, genres, reviews) and a **React + RTK Query** frontend that consumes it, including a protected admin dashboard. This is a long lesson by design—treat each section as a checkpoint you can build and run before moving on.
 
 ---
 
 ## 🧭 Concept & Overview
 
-A fullstack dashboard is two cooperating applications: a **frontend** that renders the UI and a **backend** that owns the data and the rules. The frontend never talks to the database directly—it asks the backend, and the backend decides who is allowed to do what. Authentication, validation, and authorization all live on the server because the client can be tampered with.
+A fullstack dashboard is two cooperating applications: a **frontend** that renders the UI and a **backend** that owns the data and the rules. The frontend never talks to the database directly—it asks the backend, and the backend decides who is allowed to do what. Authentication, validation, and authorization all live on the server, because the client can be tampered with.
 
-Think of the system like a **members-only cinema**. The backend is the building: the ticket desk (login/register), the security guard at the screening-room door (auth middleware), the manager who alone can change the schedule (admin authorization), and the archive of films and reviews (the database). The frontend is the lobby and posters everyone sees. A guest can browse posters, but only ticket-holders can leave reviews, and only the manager can add or delete films.
+Think of the system as a **members-only cinema**. The backend is the building: the ticket desk (login/register), the security guard at the screening-room door (auth middleware), the manager who alone can change the schedule (admin authorization), and the archive of films and reviews (the database). The frontend is the lobby and the posters everyone sees. A guest can browse posters, but only ticket-holders can leave reviews, and only the manager can add or delete films.
 
 > [!NOTE]
 > We run **two processes**: the backend (Express on port 3000) and the frontend (Vite dev server). The `concurrently` package lets a single `npm run fullstack` command boot both at once, while a Vite **proxy** forwards `/api/*` calls to the backend so the browser sees one origin.
 
 > [!TIP]
-> Keep the secret stuff on the server. The JWT signing secret, the Mongo connection string, and password hashing all live in the backend. The frontend only ever holds a short-lived session reference (in our case, an `httpOnly` cookie the browser sends automatically).
+> Keep the secrets on the server. The JWT signing secret, the Mongo connection string, and password hashing all live in the backend. The frontend only ever holds a session reference (in our case, an `httpOnly` cookie the browser sends automatically).
 
 ### Frontend vs Backend responsibilities
 
@@ -32,7 +32,7 @@ Think of the system like a **members-only cinema**. The backend is the building:
 
 ## ⚡ 1. System Architecture & Relational Schema
 
-Our dashboard monitors three core resources: **Users**, **Movies**, and **Reviews/Comments**, with **Genres** categorizing movies.
+Our dashboard manages three core resources: **Users**, **Movies**, and **Reviews/Comments**, with **Genres** categorizing the movies.
 
 ```mermaid
 erDiagram
@@ -97,7 +97,7 @@ my-movies/
 
 ## 🏗️ 2. Backend Setup: Express, Mongoose & Concurrency
 
-First initialize the Node project at the project root (not inside `frontend`/`backend`) and install the backend dependencies.
+First, initialize the Node project at the project root (not inside `frontend` or `backend`) and install the backend dependencies.
 
 ```bash
 # From the project root (e.g. my-movies/)
@@ -230,7 +230,7 @@ export default User;
 
 ## 🔑 4. JWT Token Generation in an httpOnly Cookie
 
-When a user registers or logs in, we sign a JWT containing their id and store it in an `httpOnly` cookie. The browser then sends it on every request automatically—no manual header juggling, and JavaScript cannot read it (XSS-resistant).
+When a user registers or logs in, we sign a JWT containing their id and store it in an `httpOnly` cookie. The browser then sends it on every request automatically—no manual header juggling—and JavaScript cannot read it (making it XSS-resistant).
 
 ```js
 // backend/utils/createToken.js
@@ -260,7 +260,7 @@ export default generateToken;
 
 ## 🛡️ 5. Auth Middleware: `authenticate` & `authorizeAdmin`
 
-We wrap async controllers in a small `asyncHandler` so we don't repeat `try/catch` everywhere, then build two guards.
+We wrap async controllers in a small `asyncHandler` so we don't repeat `try/catch` everywhere, then build two guards on top of it.
 
 ```js
 // backend/middlewares/asyncHandler.js
@@ -312,13 +312,13 @@ export { authenticate, authorizeAdmin };
 ```
 
 > [!NOTE]
-> Middleware composes left to right. A route like `router.route("/").get(authenticate, authorizeAdmin, getAllUsers)` means: first prove you are logged in, then prove you are an admin, and only then run the handler. A regular user trips the second guard and gets `Not authorized as an admin`.
+> Middleware composes left to right. A route like `router.route("/").get(authenticate, authorizeAdmin, getAllUsers)` means: first prove you are logged in, then prove you are an admin, and only then run the handler. A regular user clears the first guard but trips the second and gets `Not authorized as an admin`.
 
 ---
 
 ## 🎬 6. Movie & Review Schemas with References
 
-Reviews are embedded inside a movie, each referencing the `User` who wrote it. The movie references its `Genre`.
+Reviews are embedded inside a movie, each one referencing the `User` who wrote it, while the movie itself references its `Genre`.
 
 ```js
 // backend/models/Movie.js
@@ -372,7 +372,7 @@ export default mongoose.model("Genre", genreSchema);
 ```
 
 > [!TIP]
-> `ObjectId` + `ref` is a relational link, not a join. To pull in the referenced user/genre data in a query, chain `.populate("user")` or `.populate("genre")` so the response contains the full sub-document instead of just the id.
+> `ObjectId` + `ref` is a relational link, not an automatic join. To pull the referenced user or genre data into a query result, chain `.populate("user")` or `.populate("genre")` so the response contains the full sub-document instead of just the id.
 
 ---
 
@@ -725,7 +725,7 @@ export default router;
 
 ### Vite proxy & constants
 
-Because the cookie is `httpOnly` and same-site, the frontend must look like the same origin. Configure a Vite proxy so `/api` forwards to the backend.
+Because the cookie is `httpOnly` and same-site, the frontend must appear to share the backend's origin. Configure a Vite proxy so that `/api` requests are forwarded to the backend.
 
 ```js
 // frontend/vite.config.js
@@ -765,7 +765,7 @@ export const apiSlice = createApi({
 
 ### Injected endpoints — queries vs mutations
 
-A **query** reads data and provides a cache tag. A **mutation** writes data and invalidates tags so dependent queries auto-refetch.
+A **query** reads data and provides a cache tag. A **mutation** writes data and invalidates tags, so dependent queries automatically refetch.
 
 ```js
 // frontend/src/redux/api/users.js
@@ -890,10 +890,10 @@ export default authSlice.reducer;
 ```
 
 > [!TIP]
-> RTK Query hooks expose loading flags: `isLoading` is `true` only on the very first fetch (no cached data yet), while `isFetching` is `true` on background refetches. Use `isLoading` for a full-screen spinner and `isFetching` for a subtle "updating" indicator.
+> RTK Query hooks expose two loading flags: `isLoading` is `true` only on the very first fetch (when there is no cached data yet), while `isFetching` is `true` on every fetch, including background refetches. Use `isLoading` for a full-screen spinner and `isFetching` for a subtle "updating" indicator.
 
 > [!WARNING]
-> We store only **non-sensitive** user info (id, username, email, isAdmin) in `localStorage` for UI convenience. The actual session credential is the `httpOnly` JWT cookie, which JavaScript cannot read—so even if `localStorage` is read by malicious script, no token is exposed.
+> We store only **non-sensitive** user info (id, username, email, isAdmin) in `localStorage` for UI convenience. The actual session credential is the `httpOnly` JWT cookie, which JavaScript cannot read—so even if a malicious script reads `localStorage`, no token is exposed.
 
 ---
 
@@ -961,7 +961,7 @@ const router = createBrowserRouter(
 ```
 
 > [!NOTE]
-> `<Navigate replace />` overwrites the current history entry instead of pushing a new one. After redirecting a logged-out user to `/login`, the browser Back button won't bounce them back into the protected page they were just kicked out of.
+> `<Navigate replace />` overwrites the current history entry instead of pushing a new one. After redirecting a logged-out user to `/login`, the browser's Back button won't bounce them back into the protected page they were just kicked out of.
 
 ---
 
@@ -974,7 +974,7 @@ Answer these questions to check your understanding. Click **Reveal Answer** to v
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  The frontend runs on the user's machine and can be inspected or tampered with—any secret shipped to the browser is effectively public. Password hashing must use `bcrypt` server-side so the plaintext never leaves the request body unhashed in the DB, and the JWT must be signed with `process.env.JWT_SECRET`, which only the server knows. If the secret lived in frontend code, anyone could forge valid tokens and impersonate any user, including admins.
+  The frontend runs on the user's machine and can be inspected or tampered with—any secret shipped to the browser is effectively public. Password hashing must use `bcrypt` server-side so the plaintext password is hashed before it ever reaches the database, and the JWT must be signed with `process.env.JWT_SECRET`, which only the server knows. If the secret lived in frontend code, anyone could forge valid tokens and impersonate any user, including admins.
 </details>
 
 ### 2. What does storing the JWT in an `httpOnly` cookie protect against, and how is it sent on each request?
@@ -982,7 +982,7 @@ Answer these questions to check your understanding. Click **Reveal Answer** to v
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  An `httpOnly` cookie cannot be read by client-side JavaScript, which mitigates **XSS** token theft (a malicious script can't `document.cookie` your token out). Combined with `sameSite: "strict"` it also reduces CSRF risk. The browser automatically attaches the cookie to every same-origin request, so the frontend never manually adds an `Authorization` header—`req.cookies.jwt` is read by the `authenticate` middleware on the server.
+  An `httpOnly` cookie cannot be read by client-side JavaScript, which mitigates **XSS** token theft (a malicious script can't read your token out of `document.cookie`). Combined with `sameSite: "strict"`, it also reduces CSRF risk. The browser automatically attaches the cookie to every same-origin request, so the frontend never manually adds an `Authorization` header—instead, the `authenticate` middleware reads `req.cookies.jwt` on the server.
 </details>
 
 ### 3. In RTK Query, how do `providesTags` and `invalidatesTags` cooperate to keep the UI in sync?
@@ -990,7 +990,7 @@ Answer these questions to check your understanding. Click **Reveal Answer** to v
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  A **query** declares the cache tags it owns via `providesTags` (e.g. `fetchGenres` provides `["Genre"]`). A **mutation** declares which tags it dirties via `invalidatesTags` (e.g. `createGenre` invalidates `["Genre"]`). When the mutation succeeds, RTK Query finds every active query providing the invalidated tag and automatically refetches it—so the genre list updates instantly after a create/update/delete with no manual `dispatch` or refetch call.
+  A **query** declares the cache tags it owns via `providesTags` (e.g. `fetchGenres` provides `["Genre"]`). A **mutation** declares which tags it dirties via `invalidatesTags` (e.g. `createGenre` invalidates `["Genre"]`). When the mutation succeeds, RTK Query finds every active query that provides the invalidated tag and automatically refetches it—so the genre list updates instantly after a create, update, or delete, with no manual `dispatch` or refetch call.
 </details>
 
 ### 4. Why does `router.route("/").get(authenticate, authorizeAdmin, getAllUsers)` use two middlewares in that specific order?
@@ -998,7 +998,7 @@ Answer these questions to check your understanding. Click **Reveal Answer** to v
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Middleware runs in sequence. `authenticate` runs first: it verifies the JWT cookie and attaches `req.user`. Only if that succeeds does `authorizeAdmin` run, and it relies on `req.user.isAdmin` having been set by the previous step. If you reversed them, `authorizeAdmin` would read `req.user` before it exists (undefined) and reject everyone. The order encodes the rule "you must be logged in *before* we can check whether you're an admin."
+  Middleware runs in sequence. `authenticate` runs first: it verifies the JWT cookie and attaches `req.user`. Only if that succeeds does `authorizeAdmin` run, and it relies on `req.user.isAdmin` having been set by that previous step. If you reversed them, `authorizeAdmin` would read `req.user` before it exists (it would be `undefined`) and reject everyone. The order encodes the rule "you must be logged in *before* we can check whether you're an admin."
 </details>
 
 ### 5. The `createReview` controller checks `alreadyReviewed` before pushing a review. Why is this server-side validation necessary even if the UI hides the review form after submitting?
@@ -1006,7 +1006,7 @@ Answer these questions to check your understanding. Click **Reveal Answer** to v
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  UI checks are convenience, not security. A user can replay the API request directly (e.g. via Postman or a script) and bypass any frontend guard. The backend is the single source of truth, so it must independently enforce business rules—here, scanning `movie.reviews` for a matching `user._id` and rejecting duplicates with a `400`. Never trust the client to enforce integrity constraints.
+  UI checks are a convenience, not a security boundary. A user can replay the API request directly (e.g. via Postman or a script) and bypass any frontend guard. The backend is the single source of truth, so it must independently enforce business rules—here, scanning `movie.reviews` for a matching `user._id` and rejecting duplicates with a `400`. Never trust the client to enforce integrity constraints.
 </details>
 
 ---
@@ -1021,7 +1021,7 @@ Answer these questions to check your understanding. Click **Reveal Answer** to v
    - `updateMovie` and `deleteMovie` mutations that also invalidate `["Movie"]`.
    Export the generated hooks (`useGetAllMoviesQuery`, `useCreateMovieMutation`, etc.).
 2. Build `CreateMovie.jsx`: controlled inputs for `name`, `year`, `image`, `detail`, `cast`, and a `<select>` populated from `useFetchGenresQuery`.
-3. On submit, call `useCreateMovieMutation`, then show a `toast.success`. Because the create mutation invalidates `["Movie"]`, confirm the movie list re-fetches automatically with no manual refetch.
+3. On submit, call `useCreateMovieMutation`, then show a `toast.success`. Because the create mutation invalidates `["Movie"]`, confirm that the movie list refetches automatically with no manual refetch.
 4. **Verify**: open the Network tab, submit the form, and watch a `POST /api/v1/movies/create-movie` followed automatically by a `GET /api/v1/movies/all-movies`.
 
 ### 🛠️ Exercise 2: Wire up the Genre management page with a modal
@@ -1029,4 +1029,4 @@ Answer these questions to check your understanding. Click **Reveal Answer** to v
 1. In `GenreList.jsx`, read all genres with `useFetchGenresQuery` and render each as a button.
 2. Use `useCreateGenreMutation` for a "create" form, and on clicking an existing genre, open a modal (`setModalVisible(true)`) seeded with `setSelectedGenre(genre)` and `setUpdatingName(genre.name)`.
 3. Inside the modal, reuse a `GenreForm` component to call `useUpdateGenreMutation({ id, updateGenre: { name } })` and `useDeleteGenreMutation(id)`.
-4. Guard the page behind `AdminRoute`. **Verify**: log in as a non-admin and confirm you are redirected to `/login`; log in as an admin (set `isAdmin: true` in MongoDB) and confirm create/update/delete all reflect instantly in the list thanks to tag invalidation.
+4. Guard the page behind `AdminRoute`. **Verify**: log in as a non-admin and confirm you are redirected to `/login`; then log in as an admin (set `isAdmin: true` in MongoDB) and confirm that create, update, and delete all reflect instantly in the list, thanks to tag invalidation.

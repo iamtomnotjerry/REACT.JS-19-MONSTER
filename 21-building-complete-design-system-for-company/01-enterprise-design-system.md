@@ -1,14 +1,14 @@
 # Building a Complete Enterprise Design System 🏛️
 
-In the previous sections you learned to *consume* existing component libraries like DaisyUI and Shadcn/ui. Now we flip the perspective and become the **authors** of a design system. Large companies do not pull random utility classes into each repository — they ship a single, versioned **source of truth** for color, spacing, radius, typography and components, and every product team consumes it the exact same way.
+In the previous sections you learned to *consume* existing component libraries like DaisyUI and Shadcn/ui. Now we flip the perspective and become the **authors** of a design system. Large companies do not pull random utility classes into each repository — they ship a single, versioned **source of truth** for color, spacing, radius, typography, and components, and every product team consumes it in exactly the same way.
 
-In this lesson we build that system end-to-end as a **monorepo** using **Yarn workspaces**. We create three packages: `foundation` (design tokens), `reactjs` (components that consume the tokens), and `storybook` (living documentation). The magic glue is **Style Dictionary**, a tool that transforms platform-agnostic token JSON into real CSS, SCSS, JavaScript, and a branded **Tailwind preset** that every component then uses.
+In this lesson we build that system end-to-end as a **monorepo** using **Yarn workspaces**. We create three packages: `foundation` (design tokens), `reactjs` (components that consume the tokens), and `storybook` (living documentation). The glue that holds it all together is **Style Dictionary**, a tool that transforms platform-agnostic token JSON into real CSS, SCSS, JavaScript, and a branded **Tailwind preset** that every component then uses.
 
 ---
 
 ## ⚡ 1. Concept & Overview: One Source of Truth
 
-A design system answers a simple but expensive question: *"What is our brand's exact warning yellow, and how do all 40 of our apps use it identically?"* If each team hardcodes `#FBBF24`, the day design changes the brand you must hunt through dozens of repositories. Instead, we define the value **once** as a token, and generate everything else from it.
+A design system answers a simple but expensive question: *"What is our brand's exact warning yellow, and how do all 40 of our apps use it identically?"* If each team hardcodes `#FBBF24`, then the day the brand changes you must hunt through dozens of repositories. Instead, we define the value **once** as a token and generate everything else from it.
 
 > [!NOTE]
 > A **design token** is a named, platform-agnostic design decision stored as data (usually JSON). `color.warning.500 = "#F59E0B"` is a token. It is not CSS, not JS, not Swift — it is the *intent*, and tooling compiles it into each of those targets. This is what lets a web team, an iOS team, and a Figma plugin all stay perfectly in sync.
@@ -95,7 +95,7 @@ Now tell the **root** `package.json` that everything under `packages/*` is a wor
 > [!WARNING]
 > The scoped names (`@company-ds/...`) are not cosmetic — the `yarn workspace <name> add ...` commands below target packages **by name**, not by folder. If you change the names, change every command to match. Pick your real brand prefix once and stay consistent.
 
-Wire the dependency arrows with workspace commands. Yarn links them with `workspace:` protocol — no network install, just symlinks inside the repo.
+Wire up the dependency arrows with workspace commands. Yarn links them with the `workspace:` protocol — no network install, just symlinks inside the repo.
 
 ```bash
 # Storybook depends on BOTH other packages
@@ -320,7 +320,7 @@ module.exports = {
 yarn workspace @company-ds/foundation build:tokens
 ```
 
-The generated `tokens.css` will contain entries like the following — proof the intent became real code:
+The generated `tokens.css` will contain entries like the following — proof that the intent became real code:
 
 ```css
 /* lib/tokens/css/tokens.css (GENERATED — do not edit) */
@@ -334,7 +334,7 @@ The generated `tokens.css` will contain entries like the following — proof the
 ```
 
 > [!WARNING]
-> Everything under `lib/` is **generated output**. Add it to `.gitignore` (or commit it deliberately as a release artifact) but **never hand-edit it** — the next `build:tokens` run will overwrite your changes. Edit the JSON in `src/tokens/` and rebuild.
+> Everything under `lib/` is **generated output**. Add it to `.gitignore` (or commit it deliberately as a release artifact), but **never hand-edit it** — the next `build:tokens` run will overwrite your changes. Edit the JSON in `src/tokens/` and rebuild.
 
 ---
 
@@ -399,7 +399,7 @@ yarn workspace @company-ds/foundation build
 
 ## ⚡ 8. The `reactjs` Package: Components That Consume Tokens
 
-Install React (and types) as **dev** dependencies, but declare React as a **peer** dependency — the consuming app provides React, your library must not bundle its own copy.
+Install React (and its types) as **dev** dependencies, but declare React as a **peer** dependency — the consuming app provides React, and your library must not bundle its own copy.
 
 ```bash
 yarn workspace @company-ds/reactjs add -D react react-dom
@@ -426,7 +426,7 @@ yarn workspace @company-ds/reactjs add -D tailwindcss
 }
 ```
 
-The component package's Tailwind config simply **presets** the branded preset built in `foundation`:
+The component package's Tailwind config simply applies the branded preset built in `foundation`:
 
 ```js
 // packages/reactjs/tailwind.config.js
@@ -479,7 +479,7 @@ yarn workspace @company-ds/reactjs watch:css
 ```
 
 > [!NOTE]
-> `peerDependencies` with `>=16.8.0` says "I need React 16.8 or newer (the hooks era), but the *consuming app* owns the actual install." This prevents the classic bug of two React copies in one bundle, which breaks hooks at runtime.
+> `peerDependencies` with `>=16.8.0` says "I need React 16.8 or newer (the hooks era), but the *consuming app* owns the actual install." This prevents the classic bug of two React copies ending up in one bundle, which breaks hooks at runtime.
 
 ---
 
@@ -493,7 +493,7 @@ npx storybook@latest init   # choose React + Vite when prompted
 cd ../..
 ```
 
-The single most important Storybook wiring step: import the compiled CSS in `preview.ts`.
+The single most important Storybook wiring step is importing the compiled CSS in `preview.ts`.
 
 ```typescript
 // packages/storybook/.storybook/preview.ts
@@ -532,7 +532,7 @@ yarn workspace @company-ds/storybook storybook
 ```
 
 > [!WARNING]
-> If Storybook shows the button with **no styling**, the cause is almost always one of two things: (1) `preview.ts` is not importing `output.css`, or (2) `output.css` was never built/watched. Run `yarn workspace @company-ds/reactjs build:css` and confirm `lib/output.css` exists and is non-empty. A common second pitfall: `tailwind.config.js` must use CommonJS `module.exports` (not `export default`) so the preset `require()` resolves.
+> If Storybook shows the button with **no styling**, the cause is almost always one of two things: (1) `preview.ts` is not importing `output.css`, or (2) `output.css` was never built/watched. Run `yarn workspace @company-ds/reactjs build:css` and confirm `lib/output.css` exists and is non-empty. A common third pitfall: `tailwind.config.js` must use CommonJS `module.exports` (not `export default`) so the preset `require()` resolves.
 
 ---
 
@@ -613,5 +613,5 @@ Answer these questions to check your understanding. Click **Reveal Answer** to v
 ### 🧩 Exercise 2: Add a Second Platform Output (JSON for a Mobile Team)
 1. In `style-dictionary.config.js`, add a fourth platform named `json` with `transformGroup: "js"`, `buildPath: "lib/tokens/json/"`, and a file `{ destination: "tokens.json", format: "json/flat" }`.
 2. Run `yarn workspace @company-ds/foundation build:tokens`.
-3. Inspect the generated `lib/tokens/json/tokens.json` — observe how the *same* source tokens are now also available in a flat JSON shape a native iOS/Android team could consume.
+3. Inspect the generated `lib/tokens/json/tokens.json` — observe how the *same* source tokens are now also available in a flat JSON shape that a native iOS/Android team could consume.
 4. Reflect: you added an entire new consumer platform without editing a single token value. Document in a comment why this proves the "single source of truth" benefit.
