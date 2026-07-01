@@ -47,32 +47,96 @@ const MyComponent = () => {
 ```
 *(Note: To render arrays cleanly as a list, we typically use the `.map()` method, which we will learn in the next lesson!)*
 
-### 4. Executing Functions
-You can call a JavaScript function inside curly braces, and React will render whatever the function returns.
+### 4. Executing Functions & Helper Methods
+You can call any JavaScript function inside curly braces, and React will render whatever the function returns. This is ideal for formatting data before displaying it.
 ```jsx
 const MyComponent = () => {
-  const multiply = (a, b) => a * b;
+  const formatPrice = (price) => `$${price.toFixed(2)}`;
 
   return (
-    <p>
-      Result: {multiply(5, 4)}
-    </p>
-  ); // Outputs: Result: 20
+    <div>
+      <p>Total cost: {formatPrice(19.99)}</p> {/* Outputs: Total cost: $19.99 */}
+    </div>
+  );
 };
 ```
 
 ### 5. Dynamic Class Names and Attributes
-You can assign variables dynamically to HTML/JSX attributes, such as `src`, `href`, or `className`.
+You can assign variables dynamically to HTML/JSX attributes, such as `src`, `href`, or `className`. For dynamic styling, template literals inside curly braces are the industry standard:
 ```jsx
-const MyComponent = () => {
-  const specialClass = "highlight-box";
-  return <div className={specialClass}>This box has a dynamic class.</div>;
+const Button = ({ variant, isActive }) => {
+  const baseClass = "btn";
+  
+  return (
+    <button className={`${baseClass} btn-${variant} ${isActive ? "active" : ""}`}>
+      Click Me
+    </button>
+  );
 };
 ```
 
 ---
 
-## 🧠 Test Your Knowledge
+## ⚠️ Critical Pitfalls & Edge Cases
+
+When working with JSX dynamic content, there are several behaviors that frequently catch developers off guard:
+
+### 1. The Object Rendering Crash (Run-time Error)
+React **cannot** render plain JavaScript objects directly as children inside JSX. Doing so will crash your application with a run-time error: `Error: Objects are not valid as a React child`.
+
+* **Incorrect:**
+  ```jsx
+  const user = { name: "Alex", age: 25 };
+  return <div>{user}</div>; // ❌ CRASHES the app!
+  ```
+* **Correct:** Render individual primitive properties or serialize the object for debugging:
+  ```jsx
+  return (
+    <div>
+      <p>Name: {user.name}</p> {/* ✅ Works */}
+      <pre>{JSON.stringify(user, null, 2)}</pre> {/* ✅ Works (for debugging) */}
+    </div>
+  );
+  ```
+
+### 2. Booleans, `null`, and `undefined` are Ignored
+Values like `true`, `false`, `null`, and `undefined` are valid JSX elements but **do not render anything** to the DOM. This is extremely useful for conditional rendering, but if you actually need to display them, you must convert them to strings:
+
+* **No output:**
+  ```jsx
+  const isOnline = true;
+  return <div>Status: {isOnline}</div>; // Renders: "Status: "
+  ```
+* **Displaying the value:**
+  ```jsx
+  return <div>Status: {isOnline.toString()}</div>; // Renders: "Status: true"
+  // OR
+  return <div>Status: {isOnline ? "Online" : "Offline"}</div>;
+  ```
+
+### 3. The `0` Short-Circuit Rendering Bug
+Because booleans render nothing, a common React pattern is short-circuit evaluation: `{condition && <Component />}`. However, if the condition evaluates to the number `0`, React **will render the `0`** on the screen because `0` is a number, not a boolean.
+
+* **Buggy Code:**
+  ```jsx
+  const items = [];
+  return <div>{items.length && <p>Items available!</p>}</div>; // Renders: "0" ❌
+  ```
+* **Safe Code:** Always resolve the check to an actual boolean value:
+  ```jsx
+  return <div>{items.length > 0 && <p>Items available!</p>}</div>; // Renders: nothing ✅
+  // OR using ternary
+  return <div>{items.length ? <p>Items available!</p> : null}</div>;
+  ```
+
+### 4. Direct Strings vs. Curly Braces in Attributes
+Do not combine quotes and curly braces when passing dynamic attributes. 
+* **Incorrect:** `src="{imageUrl}"` or `src="{{imageUrl}}"`
+* **Correct:** `src={imageUrl}`
+
+---
+
+## 🧠 Test Your Knowledge (Interview Questions)
 
 Answer these questions to check your understanding of dynamic content. Click **Reveal Answer** to verify.
 
@@ -83,18 +147,32 @@ Answer these questions to check your understanding of dynamic content. Click **R
   React will treat it as a literal string and display `2 + 2` on the screen.
 </details>
 
-### 2. Can you write a multi-line `if-else` statement directly inside JSX curly braces?
+### 2. Can you write a multi-line statement (like `if-else` or `for` loop) directly inside JSX curly braces?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  No. Inside the curly braces, you can only write **expressions** (code that returns a value, like ternary operators or logical AND statements). You cannot write statements like `if`, `for`, or `switch` directly.
+  **No.** You can only write **expressions** (code that evaluates to a value) inside curly braces. Statements like `if-else`, `for`, `while`, and variable declarations are syntax errors. For conditional logic, you must use ternary operators (`? :`), logical operators (`&&`), or call a helper function that contains the statements.
 </details>
 
-### 3. How do you pass a dynamic string variable into an `src` attribute of an image tag?
+### 3. How does React protect dynamic content inside `{}` from Cross-Site Scripting (XSS) attacks?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  You replace the quote marks with curly braces containing the variable name: `<img src={imageUrl} alt="description" />`.
+  By default, React **automatically escapes** all values rendered in JSX before displaying them. This means any HTML code passed as a dynamic string will be rendered as plain text rather than being parsed and executed as code. If you explicitly want to render HTML strings, you must use the `dangerouslySetInnerHTML` attribute.
+</details>
+
+### 4. What will be rendered by `<div>{false || "Fallback Text"}</div>`?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  It will render `"Fallback Text"`. Since `false` is ignored, the logical OR operator (`||`) falls back to the right-hand string expression, which React renders.
+</details>
+
+### 5. Why is `<img src={logoUrl} alt="logo" />` correct while `<img src="{logoUrl}" alt="logo" />` is wrong?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  The second option treats `"{logoUrl}"` as a literal string path, meaning the browser will attempt to load a file literally named `{logoUrl}` which will fail. The first option uses curly braces, allowing React to evaluate the variable `logoUrl` and assign its string value to the `src` attribute.
 </details>
 
 ---
@@ -103,22 +181,26 @@ Answer these questions to check your understanding of dynamic content. Click **R
 
 Apply what you learned in your `first-react-app` project:
 
-### 🛠️ Exercise 1: Dynamic Greeting
+### 🛠️ Exercise 1: Dynamic Greeting & Time Formatter
 1. Create a new component file `Greetings.jsx` inside `src/components/`.
-2. Define a string variable `greetMessage` (e.g. `"Hello World!"` or `"Gracias!"`).
+2. Define a string variable `greetMessage` (e.g. `"Welcome to React!"`).
 3. Render this message dynamically inside an `<h1>` tag.
-4. Create a paragraph tag `<p>` that displays the current date dynamically using `{new Date().getDate()}`.
+4. Display the current date and time formatted nicely (e.g., using `new Date().toLocaleString()`) dynamically inside a `<p>` tag.
 5. Import and render `<Greetings />` inside your `App.jsx`.
 
-### 🛠️ Exercise 2: Product Object Info
+### 🛠️ Exercise 2: Product Card with Dynamic Styling
 1. Create a new component file `ProductInfo.jsx` inside `src/components/`.
-2. Define a product object with properties:
+2. Define a product object:
    ```javascript
    const product = {
-     name: "Laptop",
-     price: 1200,
-     availability: "in stock"
+     name: "Ultra-Wide Monitor",
+     price: 499.99,
+     availability: "Out of Stock" // Try changing to "In Stock"
    };
    ```
-3. Dynamically display the product's name in an `<h1>`, price in a `<p>` (e.g., `$1200`), and availability status in another `<p>`.
-4. Import and render `<ProductInfo />` inside `App.jsx`.
+3. Dynamically display the product's name, formatted price (e.g., `$499.99`), and availability.
+4. **Challenge**: Dynamically apply styling depending on availability:
+   - If the product is `"In Stock"`, render the availability in a class named `status-available` (green text).
+   - If it is `"Out of Stock"`, render the availability in a class named `status-unavailable` (red text).
+   - *Tip*: Use template literals in the `className` attribute.
+5. Import and render `<ProductInfo />` inside `App.jsx`.

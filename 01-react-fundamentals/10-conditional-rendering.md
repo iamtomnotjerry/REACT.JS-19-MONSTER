@@ -38,7 +38,12 @@ const Notification = ({ messages }) => {
   );
 };
 ```
-*How it works*: In JavaScript, `true && expression` evaluates to `expression`, and `false && expression` evaluates to `false`. If the expression evaluates to `false` or `0`, React won't render anything.
+
+> [!CAUTION]
+> **The `0` Rendering Bug in Short-Circuit Evaluation:**
+> React will render numbers like `0` if they appear on the left side of the `&&` check.
+> * **Buggy Code:** `items.length && <List />` renders `0` to the screen if `items` is empty because `items.length` evaluates to the number `0`.
+> * **Correct Code:** Always resolve the condition to a boolean check: `items.length > 0 && <List />` or `!!items.length && <List />`.
 
 ---
 
@@ -80,7 +85,14 @@ Answer these questions to check your understanding of Conditional Rendering. Cli
   React will evaluate the statement as `false` and will render nothing in the DOM for that line.
 </details>
 
-### 3. Which operator is best suited for rendering one element if true, and a completely different element if false?
+### 3. What is the common pitfall of checking array lengths using `list.length && <Component />`? How do you fix it?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  If the array is empty, `list.length` evaluates to `0`. In React, numbers (like `0`) are rendered to the DOM, so a literal `0` will appear on the screen. To fix it, convert the number to a boolean: `list.length > 0 && <Component />` or `!!list.length && <Component />`.
+</details>
+
+### 4. Which operator is best suited for rendering one element if true, and a completely different element if false?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
@@ -93,7 +105,17 @@ Answer these questions to check your understanding of Conditional Rendering. Cli
 
 Apply what you learned in your `first-react-app` project:
 
-### 🛠️ Exercise 1: Temperature Component
+### 🛠️ Exercise 1: Password Validator Component (Class Challenge)
+1. Create a component `Password.jsx` inside `src/components/`.
+2. Inside `Password.jsx`, create two separate helper components:
+   - `ValidPassword` which returns `<h1>Valid Password</h1>`
+   - `InvalidPassword` which returns `<h1>Invalid Password</h1>`
+3. The main `Password` component should accept a boolean prop named `isValid`.
+4. Using an `if-else` statement in the body, render `<ValidPassword />` if `isValid` is true, and `<InvalidPassword />` otherwise.
+5. **Challenge**: Refactor the main `Password` component to render the result using an inline **ternary operator** inside the return JSX.
+6. Import and render `<Password isValid={true} />` and `<Password isValid={false} />` in `App.jsx` to test.
+
+### 🛠️ Exercise 2: Weather Report Component
 1. Create a component `WeatherReport.jsx` inside `src/components/`.
 2. The component should receive a prop named `temp` (a number).
 3. Use `if-else` blocks to display:
@@ -102,7 +124,7 @@ Apply what you learned in your `first-react-app` project:
    - "It's boiling hot! 🔥" if `temp` is above 28.
 4. Render it in `App.jsx` with various temperature values.
 
-### 🛠️ Exercise 2: User Status Display
+### 🛠️ Exercise 3: User Status Display
 1. Create a component `UserStatus.jsx` inside `src/components/`.
 2. The component should receive two props: `loggedIn` (boolean) and `isAdmin` (boolean).
 3. Using inline ternary operators and logical AND (`&&`):

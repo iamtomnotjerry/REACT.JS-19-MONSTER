@@ -8,7 +8,7 @@
 
 Thông thường, mọi component trong ứng dụng React đều được lồng bên trong phần tử `#root` trong tệp `index.html`. Tuy nhiên, đối với một số component UI như modal, popup, và tooltip, việc đặt chúng lồng sâu trong cây DOM có thể gây ra các vấn đề về CSS styling (như xung đột `z-index` hoặc thuộc tính `overflow: hidden` cắt mất các phần tử).
 
-React Portals giải quyết vấn đề này bằng cách cho phép bạn render một component vào một **node DOM hoàn toàn khác** trong khi nó vẫn giữ nguyên vị trí trong cây component React.
+React Portals giải quyết vấn đề này bằng cách cho phép bạn render một component vào một **node DOM hoàn toàn khác** trong khi nó vẫn giữ nguyên vị trí logic trong cây component React.
 
 ### Cách sử dụng Portals
 1. Tạo một phần tử container bên trong tệp `index.html`:
@@ -33,6 +33,26 @@ const PortalPopup = () => {
 };
 ```
 *Lưu ý: Hãy đảm bảo import `createPortal` từ `'react-dom'`, chứ không phải từ `'react'`!*
+
+### ⚠️ Khái niệm cốt lõi: Sự lan truyền sự kiện (Event Bubbling) qua Portals
+Mặc dù một phần tử portal được render bên ngoài node DOM cha trong cấu trúc HTML thực tế, **các sự kiện vẫn lan truyền (bubble up) ngược lên qua cây component React**.
+
+Nếu người dùng nhấp vào một nút bấm bên trong một portal, bất kỳ trình xử lý sự kiện click nào được đặt trên component cha bọc ngoài trong mã JSX của bạn vẫn sẽ được kích hoạt:
+
+```jsx
+const Parent = () => {
+  const handleParentClick = () => {
+    console.log("Click bubbled up to parent, even though target is in a portal!");
+  };
+
+  return (
+    <div onClick={handleParentClick}>
+      <h1>Parent Layout</h1>
+      <PortalPopup />
+    </div>
+  );
+};
+```
 
 ---
 
@@ -66,7 +86,7 @@ Bằng cách thêm một prop `key` duy nhất gắn liền với state, React s
 
 ---
 
-## 🧠 Kiểm tra kiến thức
+## 🧠 Kiểm tra kiến thức (Chuẩn bị phỏng vấn)
 
 Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của bạn về Portals & Keys. Nhấp vào **Reveal Answer** để xác nhận câu trả lời.
 
@@ -84,7 +104,14 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của b
   Portals được sử dụng tốt nhất cho các component cần phá vỡ các ràng buộc styling layout của phần tử cha, chẳng hạn như modal dialog, tooltip, toast notification, và dropdown menu.
 </details>
 
-### 3. React hành xử như thế nào khi prop `key` của một component đơn lẻ thay đổi?
+### 3. Sự lan truyền sự kiện (Event Bubbling) hoạt động như thế nào với React Portals?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  Mặc dù portal render phần tử HTML tại một vị trí DOM vật lý khác, sự lan truyền sự kiện vẫn tuân theo hệ thống phân cấp cây component React chứ không theo cây HTML DOM. Do đó, các sự kiện vẫn sẽ bubble up từ portal lên các component React cha của nó.
+</details>
+
+### 4. React hành xử như thế nào khi prop `key` của một component đơn lẻ thay đổi?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
@@ -97,9 +124,10 @@ Trả lời các câu hỏi sau để kiểm tra mức độ hiểu bài của b
 
 Áp dụng những gì đã học vào dự án `first-react-app` của bạn:
 
-### 🛠️ Bài tập 1: Portal Overlay
+### 🛠️ Bài tập 1: Portal Overlay với Event Bubbling
 1. Thêm một `<div id="modal-root"></div>` vào trong tệp `index.html` của bạn.
 2. Tạo một component tên là `ModalPortal.jsx` bên trong `src/components/`.
-3. Bên trong đó, render một card đơn giản sử dụng `createPortal` để đưa nội dung ra `#modal-root`.
-4. Style card với fixed positioning (`position: fixed`) để tạo lớp phủ toàn màn hình.
-5. Render `<ModalPortal />` trong `App.jsx` và inspect cây DOM (F12) để xác nhận nó nằm dưới `#modal-root`.
+3. Bên trong đó, render một chiếc modal card đơn giản sử dụng `createPortal` chứa một nút bấm ghi `"Click inside Portal Modal"`.
+4. Định kiểu cho chiếc card để nó phủ toàn bộ màn hình.
+5. Render `<ModalPortal />` bên trong một thẻ div bao ngoài trong file `App.jsx` có thiết lập trình xử lý sự kiện `onClick`.
+6. Xác nhận việc click vào nút bên trong modal sẽ kích hoạt trình xử lý sự kiện click của thẻ div bao ngoài, chứng minh sự kiện có thể bubble up thông qua Portals!

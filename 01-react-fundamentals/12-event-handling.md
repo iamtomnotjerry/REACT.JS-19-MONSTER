@@ -9,7 +9,7 @@ React allows you to handle user interactions (like clicks, mouse movements, form
 Here is how you handle a button click in React:
 
 ### Option A: Using a Named Function (Recommended)
-This approach is clean, especially for complex event handler logic.
+This approach is clean and keeps your JSX organized, especially for complex handler logic.
 
 ```jsx
 const ClickButton = () => {
@@ -25,7 +25,7 @@ const ClickButton = () => {
 > Writing parentheses calls the function immediately during the render phase, rather than waiting for the user to click.
 
 ### Option B: Using an Inline Arrow Function
-Useful for short, simple actions.
+Useful for short, single-line actions.
 
 ```jsx
 const ClickButton = () => {
@@ -60,30 +60,45 @@ const UserActions = () => {
 
 ---
 
-## 🖱️ 3. Other Common Mouse Events
+## ⚙️ 3. The Synthetic Event Object (`e`) & Preventing Defaults
 
-React supports all standard browser events, mapping them to camelCase:
+When an event handler is triggered, React automatically passes an **Event Object** (conventionally named `e` or `event`) as the first argument to the handler function. 
+React's event object is called a **SyntheticEvent**. It is a cross-browser wrapper around the browser's native event, ensuring the exact same behavior across Safari, Chrome, Edge, and Firefox.
+
+### A. Accessing Input Values
+You can inspect what the user typed in an input element using `e.target.value`:
+```jsx
+const InputField = () => {
+  const handleInputChange = (e) => {
+    console.log("User typed:", e.target.value);
+  };
+
+  return <input type="text" onChange={handleInputChange} />;
+};
+```
+
+### B. Preventing Default Action (`e.preventDefault()`)
+Many HTML elements have built-in default behaviors. For example, clicking a submit button in a form automatically reloads the entire webpage. You can stop this default behavior by calling `e.preventDefault()`:
 
 ```jsx
-const HoverBox = () => {
-  const handleMouseMove = () => {
-    console.log("Mouse moved over the box!");
+const FormComponent = () => {
+  const handleSubmit = (e) => {
+    e.preventDefault(); // Stop page reload!
+    console.log("Form submitted safely without reload.");
   };
 
   return (
-    <div
-      onMouseMove={handleMouseMove}
-      style={{ padding: "50px", border: "1px solid black" }}
-    >
-      Hover over me and check console!
-    </div>
+    <form onSubmit={handleSubmit}>
+      <input type="text" placeholder="Enter info" />
+      <button type="submit">Submit Form</button>
+    </form>
   );
 };
 ```
 
 ---
 
-## 🧠 Test Your Knowledge
+## 🧠 Test Your Knowledge (Interview Prep)
 
 Answer these questions to check your understanding of Event Handling. Click **Reveal Answer** to verify.
 
@@ -95,18 +110,18 @@ Answer these questions to check your understanding of Event Handling. Click **Re
   - `onClick={handleClick()}` executes the function **immediately when the component renders**, which is usually a bug and can cause infinite re-render loops if the function updates state.
 </details>
 
-### 2. How do you pass arguments to an event handler in React?
+### 2. What is the Event object `e` and what does `e.preventDefault()` do?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  You wrap the handler function inside an inline arrow function: `onClick={() => handleAction(arg)}`.
+  The event object `e` is an object automatically passed by React containing metadata about the triggered event (e.g., target element, click coordinates). `e.preventDefault()` is used to block the browser's default action associated with the event, such as preventing a page reload when submitting a `<form>`.
 </details>
 
-### 3. What naming convention does React use for event handlers (e.g. `onclick` vs `onClick`)?
+### 3. What is a SyntheticEvent in React?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  React uses **camelCase** for event handlers (e.g. `onClick`, `onMouseEnter`, `onMouseMove`, `onSubmit`).
+  React wraps the native browser events in a custom **SyntheticEvent** object to ensure they behave consistently across all browsers and operating systems, solving cross-compatibility issues automatically.
 </details>
 
 ---
@@ -120,3 +135,9 @@ Apply what you learned in your `first-react-app` project:
 2. Render a button that console-logs `"Click event fired!"` when clicked.
 3. Render a paragraph `<p>` that console-logs `"Mouse hover event fired!"` when the mouse enters its area (using `onMouseEnter`).
 4. Import and render `<ButtonConsole />` inside `App.jsx`.
+
+### 🛠️ Exercise 2: Form reload prevention
+1. Create a component `FormSubmit.jsx` inside `src/components/`.
+2. Render a `<form>` containing an `<input>` field and a `<button type="submit">`.
+3. Set up an `onSubmit` handler that calls `e.preventDefault()`, logs the message `"Form submission intercepted! No page reload occurred."` in the console, and alerts the message.
+4. Render `<FormSubmit />` in `App.jsx` and test submitting it. Verify that the browser page does not reload!

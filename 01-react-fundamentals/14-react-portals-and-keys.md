@@ -8,7 +8,7 @@ As we finish our React Fundamentals journey, we will explore two advanced render
 
 Normally, every component in a React app is nested inside the `#root` element in `index.html`. However, for some UI components like modals, popups, and tooltips, having them nested deep in the DOM tree can cause CSS styling issues (like `z-index` conflicts or `overflow: hidden` cutting off elements).
 
-React Portals solve this by letting you render a component into a **completely different DOM node** while retaining its place in the React component tree.
+React Portals solve this by letting you render a component into a **completely different DOM node** while retaining its logical place in the React component tree.
 
 ### How to Use Portals
 1. Create a container element inside `index.html`:
@@ -33,6 +33,26 @@ const PortalPopup = () => {
 };
 ```
 *Note: Make sure to import `createPortal` from `'react-dom'`, not from `'react'`!*
+
+### ⚠️ Critical Concept: Event Bubbling through Portals
+Even though a portal element is rendered outside the parent DOM node in the actual HTML structure, **events still bubble up through the React component tree**. 
+
+If a user clicks a button inside a portal, any click event handler placed on the parent wrapper component in your React JSX will still trigger:
+
+```jsx
+const Parent = () => {
+  const handleParentClick = () => {
+    console.log("Click bubbled up to parent, even though target is in a portal!");
+  };
+
+  return (
+    <div onClick={handleParentClick}>
+      <h1>Parent Layout</h1>
+      <PortalPopup />
+    </div>
+  );
+};
+```
 
 ---
 
@@ -66,7 +86,7 @@ By adding a unique `key` prop tied to the state, React recognizes them as separa
 
 ---
 
-## 🧠 Test Your Knowledge
+## 🧠 Test Your Knowledge (Interview Prep)
 
 Answer these questions to check your understanding of Portals & Keys. Click **Reveal Answer** to verify.
 
@@ -84,7 +104,14 @@ Answer these questions to check your understanding of Portals & Keys. Click **Re
   Portals are best used for components that need to break out of parent layout styling constraints, such as modal dialogs, tooltips, toast notifications, and dropdown menus.
 </details>
 
-### 3. How does React behave when the `key` prop of a single component changes?
+### 3. How does event bubbling behave with React Portals?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  Even though a portal renders the HTML element in a different physical DOM location, event bubbling follows the React component tree hierarchy, not the HTML DOM hierarchy. Thus, events will still bubble up from the portal to its parent React components.
+</details>
+
+### 4. How does React behave when the `key` prop of a single component changes?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
@@ -97,9 +124,10 @@ Answer these questions to check your understanding of Portals & Keys. Click **Re
 
 Apply what you learned in your `first-react-app` project:
 
-### 🛠️ Exercise 1: Portal Overlay
+### 🛠️ Exercise 1: Portal Overlay with Event Bubbling
 1. Add a `<div id="modal-root"></div>` to your `index.html` file.
 2. Create a component `ModalPortal.jsx` inside `src/components/`.
-3. Inside it, render a simple card that uses `createPortal` to output to `#modal-root`.
-4. Style the card with fixed positioning (`position: fixed`) to overlay the screen.
-5. Render `<ModalPortal />` in `App.jsx` and inspect the DOM (F12) to verify it lives under `#modal-root`.
+3. Inside it, render a simple modal card using `createPortal` containing a button that says `"Click inside Portal Modal"`.
+4. Style the card to cover the screen.
+5. Render `<ModalPortal />` inside a wrapper div in `App.jsx` that has an `onClick` event listener.
+6. Verify that clicking the button inside the modal triggers the wrapper div's click handler, demonstrating event bubbling through Portals!

@@ -31,12 +31,46 @@ Nếu bạn render một danh sách mà không cung cấp prop `key` cho phần 
 > *Warning: Each child in a list should have a unique "key" prop.*
 
 ### React sử dụng Key như thế nào
-1. **Reconciliation (Đối chiếu)**: Khi một item trong danh sách được thêm vào, xóa đi, hoặc sắp xếp lại, React so sánh các cây Virtual DOM.
-2. **Identity (Định danh)**: `key` đóng vai trò là một định danh duy nhất cho phần tử cụ thể đó. Nó nói cho React biết: *"Phần tử này tương ứng với item dữ liệu cụ thể này"*.
-3. **Performance (Hiệu năng)**: Với key, React chỉ cập nhật hoặc sắp xếp lại những phần tử DOM thực sự thay đổi, thay vì hủy bỏ và xây dựng lại toàn bộ danh sách từ đầu.
+1. **Đối chiếu (Reconciliation)**: Khi một item trong danh sách được thêm vào, xóa đi, hoặc sắp xếp lại, React so sánh các cây Virtual DOM.
+2. **Định danh (Identity)**: `key` đóng vai trò là một định danh duy nhất cho phần tử cụ thể đó. Nó nói cho React biết: *"Phần tử này tương ứng với item dữ liệu cụ thể này"*.
+3. **Hiệu năng (Performance)**: Với key, React chỉ cập nhật hoặc sắp xếp lại những phần tử DOM thực sự thay đổi, thay vì hủy bỏ và xây dựng lại toàn bộ danh sách từ đầu.
 
-> [!WARNING]
-> **Tránh sử dụng chỉ số (index) của mảng làm key** nếu các item trong danh sách có thể thay đổi, được sắp xếp lại, hoặc được lọc. Làm như vậy có thể gây ra các lỗi hiển thị và vấn đề về hiệu năng. Luôn ưu tiên dùng các ID duy nhất từ dữ liệu của bạn (ví dụ `user.id`).
+---
+
+## ⚠️ Thực tiễn tốt nhất & Các bẫy cần tránh khi dùng Key
+
+### 1. Tránh sử dụng Chỉ số (Index) của Mảng làm Key
+Không sử dụng chỉ số mảng (tham số thứ hai trong vòng lặp `.map(item, index)`) làm key nếu danh sách có khả năng thay đổi, sắp xếp lại, lọc hoặc thêm/xóa phần tử.
+* **Lỗi xảy ra:** Khi bạn sắp xếp lại danh sách, chỉ số index của phần tử sẽ thay đổi. React sẽ nhận nhầm danh tính phần tử DOM, gây ra lỗi hiển thị (ví dụ: các ô input giữ lại giá trị của sai item) và làm giảm hiệu suất render.
+* **Quy tắc:** Chỉ sử dụng index làm key khi bạn chắc chắn 100% danh sách này là tĩnh (chỉ đọc) và không bao giờ thay đổi.
+
+### 2. Tuyệt đối không dùng Key ngẫu nhiên (ví dụ: `Math.random()`)
+Tạo key ngẫu nhiên ngay khi render là một lỗi phản mẫu (anti-pattern) rất nặng trong React:
+* **Lỗi xảy ra:** Ở *mỗi lần render*, một key mới sẽ được tạo ra. React coi đây là một phần tử hoàn toàn mới, dẫn đến việc unmount (hủy bỏ) phần tử DOM cũ và mount (tạo mới) phần tử mới. Điều này gây ra:
+  - Mất hoàn toàn state cục bộ của component con (ví dụ: chữ trong ô input bị xóa sạch).
+  - Mất tiêu điểm (focus) của con trỏ chuột.
+  - Hiệu năng cực kỳ kém do DOM phải liên tục xây dựng lại.
+* **Quy tắc:** Key phải **ổn định, dự đoán được và duy nhất**. Hãy luôn sử dụng ID duy nhất từ dữ liệu của bạn (ví dụ: `user.id`).
+
+### 3. Thiết lập Key cho React Fragment
+Nếu bạn cần hiển thị nhiều phần tử đồng cấp cho mỗi item trong danh sách mà không muốn bọc chúng trong một thẻ bao ngoài (như `div`), bạn phải dùng cú pháp `<React.Fragment>` đầy đủ, vì cú pháp viết tắt (`<>...</>`) không hỗ trợ thuộc tính như `key`.
+
+```jsx
+import React from 'react';
+
+const DefinitionList = ({ items }) => {
+  return (
+    <dl>
+      {items.map((item) => (
+        <React.Fragment key={item.id}>
+          <dt>{item.term}</dt>
+          <dd>{item.description}</dd>
+        </React.Fragment>
+      ))}
+    </dl>
+  );
+};
+```
 
 ---
 
@@ -45,7 +79,7 @@ Nếu bạn render một danh sách mà không cung cấp prop `key` cho phần 
 Trong các ứng dụng thực tế, dữ liệu thường được biểu diễn dưới dạng một mảng các object.
 
 ```jsx
-const ProductList = () => {
+const ProductCatalog = () => {
   const products = [
     { id: 101, name: "Keyboard", price: 50 },
     { id: 102, name: "Mouse", price: 30 },
@@ -83,14 +117,28 @@ Hãy trả lời những câu hỏi sau để kiểm tra mức độ hiểu củ
 <details>
   <summary><b>Reveal Answer</b></summary>
 
-  Nếu danh sách bị sắp xếp lại, được sort, được lọc, hoặc các item bị chèn thêm/xóa đi, thì index của mỗi item sẽ thay đổi. Điều này có thể khiến React đối chiếu sai các trạng thái UI (chẳng hạn như các ô input giữ lại giá trị của sai item trong danh sách) và làm giảm hiệu năng render.
+  Nếu danh sách bị sắp xếp lại, lọc hoặc thêm/xóa phần tử, index của các item sẽ thay đổi. Điều này khiến React đối chiếu sai trạng thái giao diện (như giữ lại giá trị nhập của sai ô input) và làm giảm hiệu năng render.
 </details>
 
-### 3. Phần tử nào trong vòng lặp phải nhận prop `key`?
+### 3. Điều gì xảy ra nếu bạn sử dụng `key={Math.random()}` khi render danh sách?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  Ở mỗi lần render, React tạo ra một key mới ngẫu nhiên. React sẽ unmount hoàn toàn phần tử DOM cũ và mount lại phần tử mới từ đầu. Gây mất state (xóa sạch nội dung input), mất focus và suy giảm hiệu năng nghiêm trọng.
+</details>
+
+### 4. Phần tử nào trong vòng lặp phải nhận prop `key`?
 <details>
   <summary><b>Reveal Answer</b></summary>
 
   **Phần tử ngoài cùng** được trả về bởi hàm callback của `.map()` phải nhận prop `key`.
+</details>
+
+### 5. Làm sao để truyền key nếu bạn muốn render nhiều phần tử đồng cấp mà không cần thẻ div bao ngoài?
+<details>
+  <summary><b>Reveal Answer</b></summary>
+
+  Bạn phải import `React` và dùng thẻ `<React.Fragment key={item.id}>...</React.Fragment>`. Cú pháp viết tắt `<>...</>` không hỗ trợ truyền thuộc tính `key`.
 </details>
 
 ---
@@ -111,3 +159,16 @@ Hãy trả lời những câu hỏi sau để kiểm tra mức độ hiểu củ
    ```
 3. Sử dụng phương thức `.map()` để render danh sách những người dùng này, hiển thị tên (name) và tuổi (age) của họ. Đảm bảo mỗi item có một `key` duy nhất.
 4. Import và render `<UserList />` trong `App.jsx`.
+
+### 🛠️ Bài tập 2: Component danh sách sản phẩm (Product List)
+1. Tạo một file component mới `ProductList.jsx` bên trong `src/components/`.
+2. Định nghĩa một mảng sản phẩm:
+   ```javascript
+   const products = [
+     { id: 1, name: "Phone", price: 699 },
+     { id: 2, name: "Laptop", price: 1200 },
+     { id: 3, name: "Headphones", price: 199 }
+   ];
+   ```
+3. Dùng phương thức `.map()` hiển thị tên và giá của từng sản phẩm. Sử dụng `id` sản phẩm làm key.
+4. Import và render `<ProductList />` bên trong `App.jsx`.
